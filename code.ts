@@ -5,218 +5,268 @@
 // You can access browser APIs in the <script> tag inside "ui.html" which has a
 // full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
 
-// Show the HTML page in "ui.html"
-figma.showUI(__html__, { width: 600, height: 800 });
-
-// Send notification to UI
-function sendNotification(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') {
-  figma.ui.postMessage({
-    type: 'notification',
-    message: message,
-    notificationType: type
-  });
+// Types for better type safety
+interface PageItem {
+  id: string;
+  name: string;
+  index: number;
+  type: 'page' | 'separator';
 }
 
-// Send existing pages to UI on startup
-function sendExistingPages() {
-  try {
-    const existingPages = figma.root.children
-      .filter(page => page && page.id && page.name) // Filter out invalid pages
-      .map((page, index) => ({
-        id: page.id,
-        name: page.name,
-        index: index,
-        type: 'page'
-      }));
-    
-    console.log('Sending existing pages to UI:', existingPages.length, 'pages');
+interface PluginMessage {
+  type: 'create-pages' | 'delete-page' | 'reorder-page' | 'rename-page';
+  items?: PageItem[];
+  pageId?: string;
+  newIndex?: number;
+  newName?: string;
+}
+
+interface NotificationMessage {
+  type: 'notification';
+  message: string;
+  notificationType: 'info' | 'success' | 'warning' | 'error';
+}
+
+interface PagesUpdateMessage {
+  type: 'existing-pages';
+  pages: PageItem[];
+}
+
+// Notification Service
+class NotificationService {
+  static send(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
     figma.ui.postMessage({
-      type: 'existing-pages',
-      pages: existingPages
-    });
-  } catch (error) {
-    console.error('Error getting existing pages:', error);
-    // Try again after a short delay
-    setTimeout(() => {
-      try {
-        const existingPages = figma.root.children
-          .filter(page => page && page.id && page.name)
-          .map((page, index) => ({
-            id: page.id,
-            name: page.name,
-            index: index,
-            type: 'page'
-          }));
-        
-        figma.ui.postMessage({
-          type: 'existing-pages',
-          pages: existingPages
-        });
-      } catch (retryError) {
-        console.error('Failed to get pages on retry:', retryError);
-      }
-    }, 200);
+      type: 'notification',
+      message,
+      notificationType: type
+    } as NotificationMessage);
   }
 }
 
-// Send existing pages to UI after deletion, excluding the deleted page
-function sendExistingPagesAfterDelete(deletedPageId: string) {
-  try {
-    const existingPages = figma.root.children
-      .filter(page => page && page.id && page.name && page.id !== deletedPageId) // Filter out invalid pages and deleted page
+// Page Manager
+class PageManager {
+  static getExistingPages(): PageItem[] {
+    return figma.root.children
+      .filter(page => page && page.id && page.name)
       .map((page, index) => ({
         id: page.id,
         name: page.name,
-        index: index,
-        type: 'page'
+        index,
+        type: 'page' as const
       }));
-    
-    console.log('Sending existing pages to UI after deletion:', existingPages.length, 'pages');
-    figma.ui.postMessage({
-      type: 'existing-pages',
-      pages: existingPages
-    });
-  } catch (error) {
-    console.error('Error getting existing pages after deletion:', error);
-    // Fallback to regular sendExistingPages
-    sendExistingPages();
   }
-}
 
-// Send existing pages when UI loads
-sendExistingPages();
+  static sendExistingPages(): void {
+    try {
+      const existingPages = this.getExistingPages();
+      console.log('Sending existing pages to UI:', existingPages.length, 'pages');
+      
+      figma.ui.postMessage({
+        type: 'existing-pages',
+        pages: existingPages
+      } as PagesUpdateMessage);
+    } catch (error) {
+      console.error('Error getting existing pages:', error);
+      // Retry after delay
+      setTimeout(() => {
+        try {
+          const existingPages = this.getExistingPages();
+          figma.ui.postMessage({
+            type: 'existing-pages',
+            pages: existingPages
+          } as PagesUpdateMessage);
+        } catch (retryError) {
+          console.error('Failed to get pages on retry:', retryError);
+        }
+      }, 200);
+    }
+  }
 
-// Handle messages from the UI
-figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string, pageId?: string, newIndex?: number, newName?: string}) => {
-  if (msg.type === 'create-pages') {
-    if (!msg.items || msg.items.length === 0) {
-      sendNotification('No elements to create pages', 'warning');
+  static sendExistingPagesAfterDelete(deletedPageId: string): void {
+    try {
+      const existingPages = figma.root.children
+        .filter(page => page && page.id && page.name && page.id !== deletedPageId)
+        .map((page, index) => ({
+          id: page.id,
+          name: page.name,
+          index,
+          type: 'page' as const
+        }));
+      
+      console.log('Sending existing pages to UI after deletion:', existingPages.length, 'pages');
+      figma.ui.postMessage({
+        type: 'existing-pages',
+        pages: existingPages
+      } as PagesUpdateMessage);
+    } catch (error) {
+      console.error('Error getting existing pages after deletion:', error);
+      this.sendExistingPages();
+    }
+  }
+
+  static createPages(items: PageItem[]): void {
+    if (!items || items.length === 0) {
+      NotificationService.send('No elements to create pages', 'warning');
       figma.closePlugin();
       return;
     }
 
-    console.log('Received items for page creation:', msg.items);
+    console.log('Received items for page creation:', items);
     let createdPages = 0;
 
-    for (const item of msg.items) {
+    for (const item of items) {
       console.log('Processing item:', item);
       
-      // For separators, always create pages (allow duplicates)
       const isSeparator = item.type === 'separator' || item.name === '──────';
 
-      // Create new page
       try {
         const newPage = figma.createPage();
-        // If it's a separator, use "---" as page name, otherwise use original name
         newPage.name = isSeparator ? '---' : item.name;
         createdPages++;
         console.log(`Created page: ${newPage.name}`);
       } catch (error) {
         console.error(`Error creating page "${item.name}":`, error);
-        sendNotification(`Error creating page "${item.name}"`, 'error');
+        NotificationService.send(`Error creating page "${item.name}"`, 'error');
       }
     }
 
     if (createdPages > 0) {
-      sendNotification(`Created page: ${msg.items[0].name}`, 'success');
-      // Send updated pages list to UI
-      sendExistingPages();
+      NotificationService.send(`Created page: ${items[0].name}`, 'success');
+      this.sendExistingPages();
     } else {
-      sendNotification('No pages were created', 'warning');
+      NotificationService.send('No pages were created', 'warning');
     }
-    return; // Don't close plugin automatically
   }
 
-  if (msg.type === 'delete-page') {
-    if (!msg.pageId) {
-      sendNotification('Page ID not specified for deletion', 'error');
+  static deletePage(pageId: string): void {
+    if (!pageId) {
+      NotificationService.send('Page ID not specified for deletion', 'error');
       return;
     }
 
     try {
-      console.log('Attempting to delete page with ID:', msg.pageId);
-      const pageToDelete = figma.root.children.find(page => page.id === msg.pageId);
+      console.log('Attempting to delete page with ID:', pageId);
+      const pageToDelete = figma.root.children.find(page => page.id === pageId);
+      
       if (!pageToDelete) {
         console.log('Page not found');
-        sendNotification('Page not found', 'error');
+        NotificationService.send('Page not found', 'error');
         return;
       }
 
-      // Don't allow deleting the last page
       if (figma.root.children.length <= 1) {
         console.log('Cannot delete last page');
-        sendNotification('Cannot delete the last page', 'warning');
+        NotificationService.send('Cannot delete the last page', 'warning');
         return;
       }
 
       const pageName = pageToDelete.name;
-      const pageId = pageToDelete.id;
+      const pageIdToDelete = pageToDelete.id;
       pageToDelete.remove();
-      console.log(`Page "${pageName}" deleted successfully`);
-      sendNotification(`Page "${pageName}" deleted`, 'success');
       
-      // Immediately send updated pages list to UI
+      console.log(`Page "${pageName}" deleted successfully`);
+      NotificationService.send(`Page "${pageName}" deleted`, 'success');
+      
       console.log('Sending updated pages list to UI');
-      sendExistingPagesAfterDelete(pageId);
+      this.sendExistingPagesAfterDelete(pageIdToDelete);
     } catch (error) {
       console.error('Error deleting page:', error);
-      sendNotification('Error deleting page', 'error');
+      NotificationService.send('Error deleting page', 'error');
     }
   }
 
-  if (msg.type === 'reorder-page') {
-    if (!msg.pageId || msg.newIndex === undefined) {
-      sendNotification('Parameters not specified for page reordering', 'error');
+  static reorderPage(pageId: string, newIndex: number): void {
+    if (!pageId || newIndex === undefined) {
+      NotificationService.send('Parameters not specified for page reordering', 'error');
       return;
     }
 
     try {
-      const pageToMove = figma.root.children.find(page => page.id === msg.pageId);
+      const pageToMove = figma.root.children.find(page => page.id === pageId);
       if (!pageToMove) {
-        sendNotification('Page not found', 'error');
+        NotificationService.send('Page not found', 'error');
         return;
       }
 
-      // In Figma API, we need to use insertChild method to reorder pages
       const currentIndex = figma.root.children.indexOf(pageToMove);
-      if (currentIndex !== -1 && currentIndex !== msg.newIndex) {
-        figma.root.insertChild(msg.newIndex, pageToMove);
-        sendNotification('Page moved', 'success');
-        
-        // Send updated pages list to UI
-        sendExistingPages();
+      if (currentIndex !== -1 && currentIndex !== newIndex) {
+        figma.root.insertChild(newIndex, pageToMove);
+        NotificationService.send('Page moved', 'success');
+        this.sendExistingPages();
       }
     } catch (error) {
       console.error('Error moving page:', error);
-      sendNotification('Error moving page', 'error');
+      NotificationService.send('Error moving page', 'error');
     }
   }
 
-  if (msg.type === 'rename-page') {
-    if (!msg.pageId || !msg.newName) {
-      sendNotification('Parameters not specified for page renaming', 'error');
+  static renamePage(pageId: string, newName: string): void {
+    if (!pageId || !newName) {
+      NotificationService.send('Parameters not specified for page renaming', 'error');
       return;
     }
 
     try {
-      const pageToRename = figma.root.children.find(page => page.id === msg.pageId);
+      const pageToRename = figma.root.children.find(page => page.id === pageId);
       if (!pageToRename) {
-        sendNotification('Page not found', 'error');
+        NotificationService.send('Page not found', 'error');
         return;
       }
 
-      pageToRename.name = msg.newName;
-      sendNotification(`Page renamed to "${msg.newName}"`, 'success');
+      const oldName = pageToRename.name;
+      pageToRename.name = newName.trim();
       
-      // Send updated pages list to UI
-      sendExistingPages();
+      console.log(`Page renamed from "${oldName}" to "${newName}"`);
+      NotificationService.send(`Page renamed to "${newName}"`, 'success');
+      this.sendExistingPages();
     } catch (error) {
       console.error('Error renaming page:', error);
-      sendNotification('Error renaming page', 'error');
+      NotificationService.send('Error renaming page', 'error');
     }
   }
+}
 
-  if (msg.type === 'close-plugin') {
-    figma.closePlugin();
+// Message Handler
+class MessageHandler {
+  static handle(msg: PluginMessage): void {
+    switch (msg.type) {
+      case 'create-pages':
+        if (msg.items) {
+          PageManager.createPages(msg.items);
+        }
+        break;
+
+      case 'delete-page':
+        if (msg.pageId) {
+          PageManager.deletePage(msg.pageId);
+        }
+        break;
+
+      case 'reorder-page':
+        if (msg.pageId && msg.newIndex !== undefined) {
+          PageManager.reorderPage(msg.pageId, msg.newIndex);
+        }
+        break;
+
+      case 'rename-page':
+        if (msg.pageId && msg.newName) {
+          PageManager.renamePage(msg.pageId, msg.newName);
+        }
+        break;
+
+      default:
+        console.warn('Unknown message type:', (msg as {type: string}).type);
+    }
   }
+}
+
+// Plugin initialization
+figma.showUI(__html__, { width: 600, height: 800 });
+
+// Send existing pages when UI loads
+PageManager.sendExistingPages();
+
+// Handle messages from the UI
+figma.ui.onmessage = (msg: PluginMessage) => {
+  MessageHandler.handle(msg);
 };
