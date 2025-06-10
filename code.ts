@@ -8,6 +8,15 @@
 // Show the HTML page in "ui.html"
 figma.showUI(__html__, { width: 600, height: 800 });
 
+// Send notification to UI
+function sendNotification(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') {
+  figma.ui.postMessage({
+    type: 'notification',
+    message: message,
+    notificationType: type
+  });
+}
+
 // Send existing pages to UI on startup
 function sendExistingPages() {
   try {
@@ -81,7 +90,7 @@ sendExistingPages();
 figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string, pageId?: string, newIndex?: number, newName?: string}) => {
   if (msg.type === 'create-pages') {
     if (!msg.items || msg.items.length === 0) {
-      figma.notify('No elements to create pages');
+      sendNotification('No elements to create pages', 'warning');
       figma.closePlugin();
       return;
     }
@@ -116,23 +125,23 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
         console.log(`Created page: ${newPage.name}`);
       } catch (error) {
         console.error(`Error creating page "${item.name}":`, error);
-        figma.notify(`Error creating page "${item.name}"`);
+        sendNotification(`Error creating page "${item.name}"`, 'error');
       }
     }
 
     if (createdPages > 0) {
-      figma.notify(`Created pages: ${createdPages}`);
+      sendNotification(`Created page: ${msg.items[0].name}`, 'success');
       // Send updated pages list to UI
       sendExistingPages();
     } else {
-      figma.notify('No pages were created');
+      sendNotification('No pages were created', 'warning');
     }
     return; // Don't close plugin automatically
   }
 
   if (msg.type === 'delete-page') {
     if (!msg.pageId) {
-      figma.notify('Page ID not specified for deletion');
+      sendNotification('Page ID not specified for deletion', 'error');
       return;
     }
 
@@ -141,14 +150,14 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
       const pageToDelete = figma.root.children.find(page => page.id === msg.pageId);
       if (!pageToDelete) {
         console.log('Page not found');
-        figma.notify('Page not found');
+        sendNotification('Page not found', 'error');
         return;
       }
 
       // Don't allow deleting the last page
       if (figma.root.children.length <= 1) {
         console.log('Cannot delete last page');
-        figma.notify('Cannot delete the last page');
+        sendNotification('Cannot delete the last page', 'warning');
         return;
       }
 
@@ -156,27 +165,27 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
       const pageId = pageToDelete.id;
       pageToDelete.remove();
       console.log(`Page "${pageName}" deleted successfully`);
-      figma.notify(`Page "${pageName}" deleted`);
+      sendNotification(`Page "${pageName}" deleted`, 'success');
       
       // Immediately send updated pages list to UI
       console.log('Sending updated pages list to UI');
       sendExistingPagesAfterDelete(pageId);
     } catch (error) {
       console.error('Error deleting page:', error);
-      figma.notify('Error deleting page');
+      sendNotification('Error deleting page', 'error');
     }
   }
 
   if (msg.type === 'reorder-page') {
     if (!msg.pageId || msg.newIndex === undefined) {
-      figma.notify('Parameters not specified for page reordering');
+      sendNotification('Parameters not specified for page reordering', 'error');
       return;
     }
 
     try {
       const pageToMove = figma.root.children.find(page => page.id === msg.pageId);
       if (!pageToMove) {
-        figma.notify('Page not found');
+        sendNotification('Page not found', 'error');
         return;
       }
 
@@ -184,38 +193,38 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
       const currentIndex = figma.root.children.indexOf(pageToMove);
       if (currentIndex !== -1 && currentIndex !== msg.newIndex) {
         figma.root.insertChild(msg.newIndex, pageToMove);
-        figma.notify('Page moved');
+        sendNotification('Page moved', 'success');
         
         // Send updated pages list to UI
         sendExistingPages();
       }
     } catch (error) {
       console.error('Error moving page:', error);
-      figma.notify('Error moving page');
+      sendNotification('Error moving page', 'error');
     }
   }
 
   if (msg.type === 'rename-page') {
     if (!msg.pageId || !msg.newName) {
-      figma.notify('Parameters not specified for page renaming');
+      sendNotification('Parameters not specified for page renaming', 'error');
       return;
     }
 
     try {
       const pageToRename = figma.root.children.find(page => page.id === msg.pageId);
       if (!pageToRename) {
-        figma.notify('Page not found');
+        sendNotification('Page not found', 'error');
         return;
       }
 
       pageToRename.name = msg.newName;
-      figma.notify(`Page renamed to "${msg.newName}"`);
+      sendNotification(`Page renamed to "${msg.newName}"`, 'success');
       
       // Send updated pages list to UI
       sendExistingPages();
     } catch (error) {
       console.error('Error renaming page:', error);
-      figma.notify('Error renaming page');
+      sendNotification('Error renaming page', 'error');
     }
   }
 
