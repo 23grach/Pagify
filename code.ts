@@ -97,24 +97,12 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
 
     console.log('Received items for page creation:', msg.items);
     let createdPages = 0;
-    const existingPages = figma.root.children.map(page => page.name);
 
     for (const item of msg.items) {
       console.log('Processing item:', item);
       
       // For separators, always create pages (allow duplicates)
       const isSeparator = item.type === 'separator' || item.name === '──────';
-      
-      if (!isSeparator) {
-        // Check if page already exists (only for non-separator pages)
-        const pageName = item.name;
-        if (existingPages.includes(pageName)) {
-          if (msg.duplicateMode === 'skip') {
-            console.log(`Page "${pageName}" already exists, skipping`);
-            continue;
-          }
-        }
-      }
 
       // Create new page
       try {

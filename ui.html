@@ -853,7 +853,12 @@
             input.focus();
             input.select();
 
+            let isRenamed = false;
+            
             function finishRename() {
+                if (isRenamed) return;
+                isRenamed = true;
+                
                 const newName = input.value.trim();
                 if (newName && newName !== currentName) {
                     parent.postMessage({
@@ -873,6 +878,8 @@
                 if (e.key === 'Enter') {
                     finishRename();
                 } else if (e.key === 'Escape') {
+                    if (isRenamed) return;
+                    isRenamed = true;
                     input.remove();
                     nameElement.style.display = '';
                 }
