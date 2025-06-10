@@ -66,11 +66,7 @@
             flex: 1;
         }
 
-        .workspace.drag-over {
-            border-color: #2563eb;
-            background: #eff6ff;
-            border-style: solid;
-        }
+
 
         .workspace-title {
             font-size: 14px;
@@ -95,7 +91,6 @@
             background: #ffffff;
             border-radius: 8px;
             border: 1px solid #e5e7eb;
-            cursor: grab;
             transition: all 0.15s ease;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
@@ -106,16 +101,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .workspace-item.dragging {
-            opacity: 0.6;
-            cursor: grabbing;
-            transform: rotate(2deg);
-        }
 
-        .workspace-item.drag-over {
-            border-color: #2563eb;
-            background: #eff6ff;
-        }
 
         .item-content {
             display: flex;
@@ -158,11 +144,21 @@
             color: #2563eb;
         }
 
-        .drag-handle {
-            color: #9ca3af;
-            cursor: grab;
-            padding: 2px;
+        .move-up, .move-down {
+            background: #f3f4f6 !important;
+            color: #6b7280 !important;
+            font-weight: bold;
             font-size: 14px;
+        }
+
+        .move-up:hover {
+            background: #e5e7eb !important;
+            color: #374151 !important;
+        }
+
+        .move-down:hover {
+            background: #e5e7eb !important;
+            color: #374151 !important;
         }
 
         .empty-workspace {
@@ -203,7 +199,7 @@
             background: #f8fafc;
             border-radius: 6px;
             border: 1px solid #e2e8f0;
-            cursor: grab;
+            cursor: pointer;
             font-size: 11px;
             font-weight: 500;
             transition: all 0.15s ease;
@@ -223,11 +219,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .library-item.dragging {
-            opacity: 0.6;
-            cursor: grabbing;
-            transform: rotate(-2deg);
-        }
+
 
         .controls {
             display: flex;
@@ -351,8 +343,7 @@
             </div>
 
             <div class="controls">
-                <button class="btn" id="createBtn">Create Pages</button>
-                <button class="btn" id="closeBtn" style="background: #6b7280; margin-left: 8px;">Close</button>
+                <button class="btn" id="createBtn">Save</button>
             </div>
         </div>
     </div>
@@ -360,12 +351,10 @@
 <script>
         let workspaceItems = [];
         let existingPages = [];
-        let draggedElement = null;
-        let draggedFromLibrary = false;
 
         // Initialize the plugin
         function init() {
-            setupDragAndDrop();
+            setupLibraryItems();
             setupEventListeners();
             updateWorkspace();
             setupMessageListener();
@@ -384,77 +373,44 @@
             });
         }
 
-        function setupDragAndDrop() {
-            // Library items drag start
+        function setupLibraryItems() {
+            // Library items click to add
             document.querySelectorAll('.library-item').forEach(item => {
-                item.addEventListener('dragstart', handleLibraryDragStart);
-                item.addEventListener('dragend', handleDragEnd);
-                item.draggable = true;
+                item.addEventListener('click', handleLibraryItemClick);
+                item.style.cursor = 'pointer';
             });
-
-            // Workspace drop area
-            const workspace = document.getElementById('workspace');
-            workspace.addEventListener('dragover', handleDragOver);
-            workspace.addEventListener('drop', handleWorkspaceDrop);
-            workspace.addEventListener('dragleave', handleDragLeave);
         }
 
         function setupEventListeners() {
             document.getElementById('createBtn').addEventListener('click', createPages);
-            document.getElementById('closeBtn').addEventListener('click', () => {
-                parent.postMessage({
-                    pluginMessage: {
-                        type: 'close-plugin'
-                    }
-                }, '*');
-            });
         }
 
-        function handleLibraryDragStart(e) {
-            console.log('Library drag start:', this.dataset.name, this.dataset.type);
-            draggedElement = this;
-            draggedFromLibrary = true;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'copy';
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = draggedFromLibrary ? 'copy' : 'move';
-            e.currentTarget.classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            if (!e.currentTarget.contains(e.relatedTarget)) {
-                e.currentTarget.classList.remove('drag-over');
-            }
-        }
-
-        function handleWorkspaceDrop(e) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
-
-            if (draggedFromLibrary) {
-                console.log('Adding item to workspace:', draggedElement.dataset.name, draggedElement.dataset.type);
-                // Add new item from library with unique ID
-                const newItem = {
-                    id: Date.now() + Math.random(),
-                    type: draggedElement.dataset.type,
-                    name: draggedElement.dataset.name
-                };
-                workspaceItems.push(newItem);
-                console.log('Workspace items count:', workspaceItems.length);
-                updateWorkspace();
-            }
+        function handleLibraryItemClick(e) {
+            console.log('Adding item to workspace:', this.dataset.name, this.dataset.type);
+            // Add new item from library with unique ID
+            const newItem = {
+                id: Date.now() + Math.random(),
+                type: this.dataset.type,
+                name: this.dataset.name
+            };
+            workspaceItems.push(newItem);
+            console.log('Workspace items count:', workspaceItems.length);
+            updateWorkspace();
         }
 
         function handleDragEnd(e) {
+            // Clean up drag state
             document.querySelectorAll('.dragging').forEach(item => {
                 item.classList.remove('dragging');
             });
             document.querySelectorAll('.drag-over').forEach(item => {
                 item.classList.remove('drag-over');
             });
+            
+            // Hide drop indicator
+            hideDropIndicator();
+            
+            // Reset drag state
             draggedElement = null;
             draggedFromLibrary = false;
         }
@@ -498,7 +454,6 @@
             allItems.forEach((item, index) => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'workspace-item';
-                itemEl.draggable = true;
                 itemEl.dataset.index = index;
                 
                 if (item.isExisting) {
@@ -506,10 +461,11 @@
                     itemEl.dataset.pageId = item.id;
                     itemEl.innerHTML = `
                         <div class="item-content">
-                            <span class="drag-handle">⋮⋮</span>
                             <span class="page-name" data-page-id="${item.id}">${item.name}</span>
                         </div>
                         <div class="item-actions">
+                            ${index > 0 ? '<button class="btn-small move-up" title="Move Up">↑</button>' : ''}
+                            ${index < allItems.length - 1 ? '<button class="btn-small move-down" title="Move Down">↓</button>' : ''}
                             <button class="btn-small edit-btn" title="Rename">✎</button>
                             <button class="btn-small danger delete-btn" title="Delete">✕</button>
                         </div>
@@ -518,6 +474,8 @@
                     // Add event listeners for existing pages
                     const deleteBtn = itemEl.querySelector('.delete-btn');
                     const editBtn = itemEl.querySelector('.edit-btn');
+                    const moveUpBtn = itemEl.querySelector('.move-up');
+                    const moveDownBtn = itemEl.querySelector('.move-down');
                     const pageName = itemEl.querySelector('.page-name');
 
                     if (deleteBtn) {
@@ -534,6 +492,20 @@
                         });
                     }
 
+                    if (moveUpBtn) {
+                        moveUpBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            moveItemUp(index);
+                        });
+                    }
+
+                    if (moveDownBtn) {
+                        moveDownBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            moveItemDown(index);
+                        });
+                    }
+
                 } else {
                     // New item
                     itemEl.dataset.id = item.id;
@@ -541,10 +513,11 @@
                     if (item.type === 'separator') {
                         itemEl.innerHTML = `
                             <div class="item-content">
-                                <span class="drag-handle">⋮⋮</span>
                                 <span style="color: #9ca3af; font-style: italic;">${item.name}</span>
                             </div>
                             <div class="item-actions">
+                                ${index > 0 ? '<button class="btn-small move-up" title="Move Up">↑</button>' : ''}
+                                ${index < allItems.length - 1 ? '<button class="btn-small move-down" title="Move Down">↓</button>' : ''}
                                 <button class="btn-small danger">✕</button>
                             </div>
                         `;
@@ -552,30 +525,42 @@
                     } else {
                         itemEl.innerHTML = `
                             <div class="item-content">
-                                <span class="drag-handle">⋮⋮</span>
                                 <span>${item.name}</span>
                             </div>
                             <div class="item-actions">
+                                ${index > 0 ? '<button class="btn-small move-up" title="Move Up">↑</button>' : ''}
+                                ${index < allItems.length - 1 ? '<button class="btn-small move-down" title="Move Down">↓</button>' : ''}
                                 <button class="btn-small danger">✕</button>
                             </div>
                         `;
                     }
 
-                    // Add remove button event listener
+                    // Add event listeners for new items
                     const removeBtn = itemEl.querySelector('.btn-small.danger');
+                    const moveUpBtn = itemEl.querySelector('.move-up');
+                    const moveDownBtn = itemEl.querySelector('.move-down');
+
                     if (removeBtn) {
                         removeBtn.addEventListener('click', (e) => {
                             e.stopPropagation();
                             removeItem(item.id);
                         });
                     }
-                }
 
-                // Add unified drag events for all items
-                itemEl.addEventListener('dragstart', handleUnifiedDragStart);
-                itemEl.addEventListener('dragover', handleUnifiedDragOver);
-                itemEl.addEventListener('drop', handleUnifiedDrop);
-                itemEl.addEventListener('dragend', handleDragEnd);
+                    if (moveUpBtn) {
+                        moveUpBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            moveItemUp(index);
+                        });
+                    }
+
+                    if (moveDownBtn) {
+                        moveDownBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            moveItemDown(index);
+                        });
+                    }
+                }
 
                 workspaceItemsContainer.appendChild(itemEl);
             });
@@ -585,67 +570,299 @@
 
 
 
-        function handleUnifiedDragStart(e) {
-            draggedElement = this;
-            draggedFromLibrary = false;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
+
+
+        function moveItemUp(index) {
+            if (index <= 0) return; // Already at the top
+            
+            // Create combined array of all items
+            const allItems = [...existingPages.map(page => ({...page, isExisting: true})), ...workspaceItems];
+            
+            // Swap with previous item
+            [allItems[index], allItems[index - 1]] = [allItems[index - 1], allItems[index]];
+            
+            updateItemsOrder(allItems);
         }
 
-        function handleUnifiedDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            this.classList.add('drag-over');
+        function moveItemDown(index) {
+            // Create combined array of all items
+            const allItems = [...existingPages.map(page => ({...page, isExisting: true})), ...workspaceItems];
+            
+            if (index >= allItems.length - 1) return; // Already at the bottom
+            
+            // Swap with next item
+            [allItems[index], allItems[index + 1]] = [allItems[index + 1], allItems[index]];
+            
+            updateItemsOrder(allItems);
         }
 
-        function handleUnifiedDrop(e) {
-            e.preventDefault();
-            this.classList.remove('drag-over');
-
-            if (!draggedFromLibrary && draggedElement !== this) {
-                const draggedIndex = parseInt(draggedElement.dataset.index);
-                const targetIndex = parseInt(this.dataset.index);
-                
-                if (draggedIndex === targetIndex) return;
-                
-                // If dragging an existing page - only allow reordering within existing pages
-                if (draggedElement.dataset.pageId && this.dataset.pageId) {
-                    const pageId = draggedElement.dataset.pageId;
-                    parent.postMessage({
-                        pluginMessage: {
-                            type: 'reorder-page',
-                            pageId: pageId,
-                            newIndex: targetIndex
-                        }
-                    }, '*');
+        function updateItemsOrder(allItems) {
+            // Separate back into existing pages and new items
+            const newExistingPages = [];
+            const newWorkspaceItems = [];
+            
+            allItems.forEach((item) => {
+                if (item.isExisting) {
+                    newExistingPages.push({
+                        id: item.id,
+                        name: item.name,
+                        index: newExistingPages.length,
+                        type: 'page'
+                    });
+                } else {
+                    newWorkspaceItems.push(item);
                 }
-                // If dragging a new item - only allow reordering within new items
-                else if (draggedElement.dataset.id && this.dataset.id) {
-                    const draggedItemIndex = draggedIndex - existingPages.length;
-                    const targetItemIndex = targetIndex - existingPages.length;
-                    
-                    const draggedItem = workspaceItems.splice(draggedItemIndex, 1)[0];
-                    workspaceItems.splice(targetItemIndex, 0, draggedItem);
-                    updateWorkspace();
-                }
-            }
+            });
+            
+            // Update arrays
+            existingPages = newExistingPages;
+            workspaceItems = newWorkspaceItems;
+            
+            // Send reorder messages for existing pages
+            newExistingPages.forEach((page, newIndex) => {
+                parent.postMessage({
+                    pluginMessage: {
+                        type: 'reorder-page',
+                        pageId: page.id,
+                        newIndex: newIndex
+                    }
+                }, '*');
+            });
+            
+            updateWorkspace();
         }
 
         function deletePage(pageId) {
-            if (confirm('Are you sure you want to delete this page?')) {
-                console.log('Deleting page with ID:', pageId);
-                
-                // Optimistically remove the page from UI immediately
-                existingPages = existingPages.filter(page => page.id !== pageId);
-                updateWorkspace();
-                
-                parent.postMessage({
-                    pluginMessage: {
-                        type: 'delete-page',
-                        pageId: pageId
-                    }
-                }, '*');
+            showConfirmDialog(
+                'Are you sure you want to delete this page?',
+                'This action cannot be undone.',
+                () => {
+                    console.log('Deleting page with ID:', pageId);
+                    
+                    // Optimistically remove the page from UI immediately
+                    existingPages = existingPages.filter(page => page.id !== pageId);
+                    updateWorkspace();
+                    
+                    parent.postMessage({
+                        pluginMessage: {
+                            type: 'delete-page',
+                            pageId: pageId
+                        }
+                    }, '*');
+                }
+            );
+        }
+
+        // Custom confirmation dialog
+        function showConfirmDialog(title, message, onConfirm) {
+            // Remove existing modal if any
+            const existingModal = document.querySelector('.modal-overlay');
+            if (existingModal) {
+                existingModal.remove();
             }
+
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.2s ease-out;
+            `;
+
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.className = 'modal-content';
+            modal.style.cssText = `
+                background: white;
+                border-radius: 12px;
+                padding: 24px;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                animation: slideInScale 0.2s ease-out;
+                position: relative;
+            `;
+
+            // Create modal header
+            const header = document.createElement('div');
+            header.style.cssText = `
+                margin-bottom: 16px;
+            `;
+
+            const titleElement = document.createElement('h3');
+            titleElement.textContent = title;
+            titleElement.style.cssText = `
+                font-size: 18px;
+                font-weight: 600;
+                color: #1f2937;
+                margin: 0 0 8px 0;
+                line-height: 1.4;
+            `;
+
+            const messageElement = document.createElement('p');
+            messageElement.textContent = message;
+            messageElement.style.cssText = `
+                font-size: 14px;
+                color: #6b7280;
+                margin: 0;
+                line-height: 1.5;
+            `;
+
+            header.appendChild(titleElement);
+            header.appendChild(messageElement);
+
+            // Create modal footer
+            const footer = document.createElement('div');
+            footer.style.cssText = `
+                display: flex;
+                gap: 12px;
+                justify-content: flex-end;
+                margin-top: 24px;
+            `;
+
+            // Cancel button
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.style.cssText = `
+                padding: 10px 20px;
+                border: 1px solid #d1d5db;
+                background: white;
+                color: #374151;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                outline: none;
+            `;
+
+            cancelBtn.addEventListener('mouseenter', () => {
+                cancelBtn.style.background = '#f9fafb';
+                cancelBtn.style.borderColor = '#9ca3af';
+            });
+
+            cancelBtn.addEventListener('mouseleave', () => {
+                cancelBtn.style.background = 'white';
+                cancelBtn.style.borderColor = '#d1d5db';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                closeModal();
+            });
+
+            // Delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.style.cssText = `
+                padding: 10px 20px;
+                border: none;
+                background: #ef4444;
+                color: white;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                outline: none;
+            `;
+
+            deleteBtn.addEventListener('mouseenter', () => {
+                deleteBtn.style.background = '#dc2626';
+            });
+
+            deleteBtn.addEventListener('mouseleave', () => {
+                deleteBtn.style.background = '#ef4444';
+            });
+
+            deleteBtn.addEventListener('click', () => {
+                onConfirm();
+                closeModal();
+            });
+
+            footer.appendChild(cancelBtn);
+            footer.appendChild(deleteBtn);
+
+            modal.appendChild(header);
+            modal.appendChild(footer);
+            overlay.appendChild(modal);
+
+            function closeModal() {
+                overlay.style.animation = 'fadeOut 0.2s ease-out';
+                modal.style.animation = 'slideOutScale 0.2s ease-out';
+                setTimeout(() => {
+                    if (overlay.parentNode) {
+                        overlay.remove();
+                    }
+                }, 200);
+            }
+
+            // Close on overlay click
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeModal();
+                }
+            });
+
+            // Close on Escape key
+            document.addEventListener('keydown', function escapeHandler(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            });
+
+            // Add modal animations
+            const modalStyles = document.createElement('style');
+            modalStyles.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+                @keyframes slideInScale {
+                    from {
+                        transform: scale(0.95) translateY(-10px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: scale(1) translateY(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOutScale {
+                    from {
+                        transform: scale(1) translateY(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: scale(0.95) translateY(-10px);
+                        opacity: 0;
+                    }
+                }
+            `;
+            if (!document.querySelector('style[data-modal-styles]')) {
+                modalStyles.setAttribute('data-modal-styles', 'true');
+                document.head.appendChild(modalStyles);
+            }
+
+            document.body.appendChild(overlay);
+
+            // Focus the delete button for keyboard navigation
+            setTimeout(() => {
+                deleteBtn.focus();
+            }, 100);
         }
 
         function startRename(nameElement, pageId) {
@@ -709,7 +926,7 @@
 
         function createPages() {
             if (workspaceItems.length === 0) {
-                alert('Add new elements to the workspace');
+                showNotification('Add new elements to the workspace', 'warning');
                 return;
             }
 
@@ -730,7 +947,80 @@
             clearWorkspace();
         }
 
+        // Custom notification system
+        function showNotification(message, type = 'info') {
+            // Remove existing notification if any
+            const existingNotification = document.querySelector('.custom-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
 
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'custom-notification';
+            notification.textContent = message;
+            
+            // Style the notification
+            const bgColor = type === 'warning' ? '#f59e0b' : type === 'error' ? '#ef4444' : '#10b981';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                max-width: 300px;
+                word-wrap: break-word;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            // Add animation styles
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+            `;
+            if (!document.querySelector('style[data-notification-styles]')) {
+                style.setAttribute('data-notification-styles', 'true');
+                document.head.appendChild(style);
+            }
+
+            // Add to page
+            document.body.appendChild(notification);
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 5000);
+        }
 
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {

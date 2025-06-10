@@ -81,7 +81,7 @@ sendExistingPages();
 figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string, pageId?: string, newIndex?: number, newName?: string}) => {
   if (msg.type === 'create-pages') {
     if (!msg.items || msg.items.length === 0) {
-      figma.notify('Нет элементов для создания страниц');
+      figma.notify('No elements to create pages');
       figma.closePlugin();
       return;
     }
@@ -101,7 +101,7 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
         const pageName = item.name;
         if (existingPages.includes(pageName)) {
           if (msg.duplicateMode === 'skip') {
-            console.log(`Страница "${pageName}" уже существует, пропускаем`);
+            console.log(`Page "${pageName}" already exists, skipping`);
             continue;
           }
         }
@@ -113,26 +113,26 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
         // If it's a separator, use "---" as page name, otherwise use original name
         newPage.name = isSeparator ? '---' : item.name;
         createdPages++;
-        console.log(`Создана страница: ${newPage.name}`);
+        console.log(`Created page: ${newPage.name}`);
       } catch (error) {
-        console.error(`Ошибка при создании страницы "${item.name}":`, error);
-        figma.notify(`Ошибка при создании страницы "${item.name}"`);
+        console.error(`Error creating page "${item.name}":`, error);
+        figma.notify(`Error creating page "${item.name}"`);
       }
     }
 
     if (createdPages > 0) {
-      figma.notify(`Создано страниц: ${createdPages}`);
+      figma.notify(`Created pages: ${createdPages}`);
       // Send updated pages list to UI
       sendExistingPages();
     } else {
-      figma.notify('Страницы не были созданы');
+      figma.notify('No pages were created');
     }
     return; // Don't close plugin automatically
   }
 
   if (msg.type === 'delete-page') {
     if (!msg.pageId) {
-      figma.notify('Не указан ID страницы для удаления');
+      figma.notify('Page ID not specified for deletion');
       return;
     }
 
@@ -141,14 +141,14 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
       const pageToDelete = figma.root.children.find(page => page.id === msg.pageId);
       if (!pageToDelete) {
         console.log('Page not found');
-        figma.notify('Страница не найдена');
+        figma.notify('Page not found');
         return;
       }
 
       // Don't allow deleting the last page
       if (figma.root.children.length <= 1) {
         console.log('Cannot delete last page');
-        figma.notify('Нельзя удалить последнюю страницу');
+        figma.notify('Cannot delete the last page');
         return;
       }
 
@@ -156,27 +156,27 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
       const pageId = pageToDelete.id;
       pageToDelete.remove();
       console.log(`Page "${pageName}" deleted successfully`);
-      figma.notify(`Страница "${pageName}" удалена`);
+      figma.notify(`Page "${pageName}" deleted`);
       
       // Immediately send updated pages list to UI
       console.log('Sending updated pages list to UI');
       sendExistingPagesAfterDelete(pageId);
     } catch (error) {
-      console.error('Ошибка при удалении страницы:', error);
-      figma.notify('Ошибка при удалении страницы');
+      console.error('Error deleting page:', error);
+      figma.notify('Error deleting page');
     }
   }
 
   if (msg.type === 'reorder-page') {
     if (!msg.pageId || msg.newIndex === undefined) {
-      figma.notify('Не указаны параметры для перемещения страницы');
+      figma.notify('Parameters not specified for page reordering');
       return;
     }
 
     try {
       const pageToMove = figma.root.children.find(page => page.id === msg.pageId);
       if (!pageToMove) {
-        figma.notify('Страница не найдена');
+        figma.notify('Page not found');
         return;
       }
 
@@ -184,38 +184,38 @@ figma.ui.onmessage = (msg: {type: string, items?: any[], duplicateMode?: string,
       const currentIndex = figma.root.children.indexOf(pageToMove);
       if (currentIndex !== -1 && currentIndex !== msg.newIndex) {
         figma.root.insertChild(msg.newIndex, pageToMove);
-        figma.notify('Страница перемещена');
+        figma.notify('Page moved');
         
         // Send updated pages list to UI
         sendExistingPages();
       }
     } catch (error) {
-      console.error('Ошибка при перемещении страницы:', error);
-      figma.notify('Ошибка при перемещении страницы');
+      console.error('Error moving page:', error);
+      figma.notify('Error moving page');
     }
   }
 
   if (msg.type === 'rename-page') {
     if (!msg.pageId || !msg.newName) {
-      figma.notify('Не указаны параметры для переименования страницы');
+      figma.notify('Parameters not specified for page renaming');
       return;
     }
 
     try {
       const pageToRename = figma.root.children.find(page => page.id === msg.pageId);
       if (!pageToRename) {
-        figma.notify('Страница не найдена');
+        figma.notify('Page not found');
         return;
       }
 
       pageToRename.name = msg.newName;
-      figma.notify(`Страница переименована в "${msg.newName}"`);
+      figma.notify(`Page renamed to "${msg.newName}"`);
       
       // Send updated pages list to UI
       sendExistingPages();
     } catch (error) {
-      console.error('Ошибка при переименовании страницы:', error);
-      figma.notify('Ошибка при переименовании страницы');
+      console.error('Error renaming page:', error);
+      figma.notify('Error renaming page');
     }
   }
 
