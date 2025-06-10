@@ -308,32 +308,51 @@
     <div class="content">
         <div class="constructor">
             <div class="workspace" id="workspace">
-                <div class="workspace-title">Структура страниц</div>
+                <div class="workspace-title">Page Structure</div>
                 <div class="workspace-items" id="workspaceItems">
                     <div class="empty-workspace" id="emptyWorkspace">
-                        Загрузка...
+                        Loading...
                     </div>
                 </div>
             </div>
 
             <div class="library">
-                <div class="library-title">Элементы</div>
+                <div class="library-title">Elements</div>
                 <div class="library-items" id="pageLibrary">
-                    <div class="library-item" data-type="page" data-name="App">App</div>
-                    <div class="library-item" data-type="page" data-name="Components">Components</div>
-                    <div class="library-item" data-type="page" data-name="Icons">Icons</div>
-                    <div class="library-item" data-type="page" data-name="Styles">Styles</div>
-                    <div class="library-item" data-type="page" data-name="References">References</div>
-                    <div class="library-item" data-type="page" data-name="Wireframes">Wireframes</div>
-                    <div class="library-item" data-type="page" data-name="Logify">Logify</div>
-                    <div class="library-item" data-type="page" data-name="Thumbnail">Thumbnail</div>
+                    <div class="library-item" data-type="page" data-name="📱 App">📱 App</div>
+                    <div class="library-item" data-type="page" data-name="💻 Desktop">💻 Desktop</div>
+                    <div class="library-item" data-type="page" data-name="🧩 Components">🧩 Components</div>
+                    <div class="library-item" data-type="page" data-name="✨ Icons">✨ Icons</div>
+                    <div class="library-item" data-type="page" data-name="✏️ Styles">✏️ Styles</div>
+                    <div class="library-item" data-type="page" data-name="🎨 Design Tokens">🎨 Design Tokens</div>
+                    <div class="library-item" data-type="page" data-name="🔠 Typography">🔠 Typography</div>
+                    <div class="library-item" data-type="page" data-name="🎛 UI Kit">🎛 UI Kit</div>
+                    <div class="library-item" data-type="page" data-name="🗂 Layouts">🗂 Layouts</div>
+                    <div class="library-item" data-type="page" data-name="🧱 Grids">🧱 Grids</div>
+                    <div class="library-item" data-type="page" data-name="🎯 Spacing">🎯 Spacing</div>
+                    <div class="library-item" data-type="page" data-name="🔤 Naming Rules">🔤 Naming Rules</div>
+                    <div class="library-item" data-type="page" data-name="🧾 References">🧾 References</div>
+                    <div class="library-item" data-type="page" data-name="📐 Wireframes">📐 Wireframes</div>
+                    <div class="library-item" data-type="page" data-name="🧪 Experiments">🧪 Experiments</div>
+                    <div class="library-item" data-type="page" data-name="💬 UX Copy">💬 UX Copy</div>
+                    <div class="library-item" data-type="page" data-name="📄 Docs">📄 Docs</div>
+                    <div class="library-item" data-type="page" data-name="💻 Dev Handoff">💻 Dev Handoff</div>
+                    <div class="library-item" data-type="page" data-name="🧬 Tokens JSON">🧬 Tokens JSON</div>
+                    <div class="library-item" data-type="page" data-name="🧾 Spec Sheets">🧾 Spec Sheets</div>
+                    <div class="library-item" data-type="page" data-name="🖼 Thumbnail">🖼 Thumbnail</div>
+                    <div class="library-item" data-type="page" data-name="🧷 Logify">🧷 Logify</div>
+                    <div class="library-item" data-type="page" data-name="🧩 Plugins">🧩 Plugins</div>
+                    <div class="library-item" data-type="page" data-name="🪄 Showcase">🪄 Showcase</div>
+                    <div class="library-item" data-type="page" data-name="🏁 Final">🏁 Final</div>
+                    <div class="library-item" data-type="page" data-name="📁 Archive">📁 Archive</div>
+                    <div class="library-item" data-type="page" data-name="🗑️ Trash">🗑️ Trash</div>
                     <div class="library-item" data-type="separator" data-name="──────">──────</div>
                 </div>
             </div>
 
             <div class="controls">
-                <button class="btn" id="createBtn">Создать страницы</button>
-                <button class="btn" id="closeBtn" style="background: #6b7280; margin-left: 8px;">Закрыть</button>
+                <button class="btn" id="createBtn">Create Pages</button>
+                <button class="btn" id="closeBtn" style="background: #6b7280; margin-left: 8px;">Close</button>
             </div>
         </div>
     </div>
@@ -457,7 +476,7 @@
                 emptyWorkspaceElement = document.createElement('div');
                 emptyWorkspaceElement.className = 'empty-workspace';
                 emptyWorkspaceElement.id = 'emptyWorkspace';
-                emptyWorkspaceElement.innerHTML = 'Перетащите элементы из библиотеки в эту область';
+                emptyWorkspaceElement.innerHTML = 'Drag elements from the library to this area';
             }
 
             // Combine existing pages and new workspace items
@@ -467,8 +486,8 @@
             if (allItems.length === 0) {
                 emptyWorkspaceElement.style.display = 'block';
                 emptyWorkspaceElement.innerHTML = existingPages.length === 0 && workspaceItems.length === 0 
-                    ? 'Загрузка...' 
-                    : 'Перетащите элементы из библиотеки в эту область';
+                    ? 'Loading...' 
+                    : 'Drag elements from the library to this area';
                 workspaceItemsContainer.innerHTML = '';
                 workspaceItemsContainer.appendChild(emptyWorkspaceElement);
                 return;
@@ -491,8 +510,8 @@
                             <span class="page-name" data-page-id="${item.id}">${item.name}</span>
                         </div>
                         <div class="item-actions">
-                            <button class="btn-small edit-btn" title="Переименовать">✎</button>
-                            <button class="btn-small danger delete-btn" title="Удалить">✕</button>
+                            <button class="btn-small edit-btn" title="Rename">✎</button>
+                            <button class="btn-small danger delete-btn" title="Delete">✕</button>
                         </div>
                     `;
 
@@ -613,7 +632,7 @@
         }
 
         function deletePage(pageId) {
-            if (confirm('Вы уверены, что хотите удалить эту страницу?')) {
+            if (confirm('Are you sure you want to delete this page?')) {
                 console.log('Deleting page with ID:', pageId);
                 
                 // Optimistically remove the page from UI immediately
@@ -690,7 +709,7 @@
 
         function createPages() {
             if (workspaceItems.length === 0) {
-                alert('Добавьте новые элементы в рабочую область');
+                alert('Add new elements to the workspace');
                 return;
             }
 
