@@ -6,7 +6,7 @@
 // full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
 
 // Show the HTML page in "ui.html"
-figma.showUI(__html__, { width: 400, height: 800 });
+figma.showUI(__html__, { width: 600, height: 800 });
 
 // Send existing pages to UI on startup
 function sendExistingPages() {
