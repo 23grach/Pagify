@@ -48,19 +48,22 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            gap: 16px;
+            gap: 12px;
         }
 
         .workspace {
-            flex: 1;
             background: #fafafa;
             border-radius: 12px;
             border: 2px dashed #e6e6e6;
-            padding: 20px;
-            min-height: 280px;
+            padding: 16px;
+            min-height: 200px;
             position: relative;
             overflow-y: auto;
             transition: all 0.2s ease;
+        }
+
+        #workspace {
+            flex: 1;
         }
 
         .workspace.drag-over {
@@ -148,6 +151,11 @@
         .btn-small.danger:hover {
             background: #fee2e2;
             color: #dc2626;
+        }
+
+        .btn-small.edit-btn:hover {
+            background: #dbeafe;
+            color: #2563eb;
         }
 
         .drag-handle {
@@ -303,7 +311,7 @@
                 <div class="workspace-title">Структура страниц</div>
                 <div class="workspace-items" id="workspaceItems">
                     <div class="empty-workspace" id="emptyWorkspace">
-                        Перетащите элементы из библиотеки в эту область
+                        Загрузка...
                     </div>
                 </div>
             </div>
@@ -319,18 +327,20 @@
                     <div class="library-item" data-type="page" data-name="Wireframes">Wireframes</div>
                     <div class="library-item" data-type="page" data-name="Logify">Logify</div>
                     <div class="library-item" data-type="page" data-name="Thumbnail">Thumbnail</div>
-                    <div class="library-item" data-type="separator" data-name="---">──────</div>
+                    <div class="library-item" data-type="separator" data-name="──────">──────</div>
                 </div>
             </div>
 
             <div class="controls">
                 <button class="btn" id="createBtn">Создать страницы</button>
+                <button class="btn" id="closeBtn" style="background: #6b7280; margin-left: 8px;">Закрыть</button>
             </div>
         </div>
     </div>
 
 <script>
         let workspaceItems = [];
+        let existingPages = [];
         let draggedElement = null;
         let draggedFromLibrary = false;
 
@@ -339,6 +349,20 @@
             setupDragAndDrop();
             setupEventListeners();
             updateWorkspace();
+            setupMessageListener();
+        }
+
+        // Listen for messages from the plugin
+        function setupMessageListener() {
+            window.addEventListener('message', (event) => {
+                const msg = event.data.pluginMessage;
+                if (msg && msg.type === 'existing-pages') {
+                    console.log('Received updated pages:', msg.pages);
+                    existingPages = msg.pages;
+                    updateWorkspace();
+                    console.log('UI updated with new pages list');
+                }
+            });
         }
 
         function setupDragAndDrop() {
@@ -358,6 +382,13 @@
 
         function setupEventListeners() {
             document.getElementById('createBtn').addEventListener('click', createPages);
+            document.getElementById('closeBtn').addEventListener('click', () => {
+                parent.postMessage({
+                    pluginMessage: {
+                        type: 'close-plugin'
+                    }
+                }, '*');
+            });
         }
 
         function handleLibraryDragStart(e) {
@@ -368,28 +399,21 @@
             e.dataTransfer.effectAllowed = 'copy';
         }
 
-        function handleWorkspaceDragStart(e) {
-            draggedElement = this;
-            draggedFromLibrary = false;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        }
-
         function handleDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = draggedFromLibrary ? 'copy' : 'move';
-            document.getElementById('workspace').classList.add('drag-over');
+            e.currentTarget.classList.add('drag-over');
         }
 
         function handleDragLeave(e) {
             if (!e.currentTarget.contains(e.relatedTarget)) {
-                document.getElementById('workspace').classList.remove('drag-over');
+                e.currentTarget.classList.remove('drag-over');
             }
         }
 
         function handleWorkspaceDrop(e) {
             e.preventDefault();
-            document.getElementById('workspace').classList.remove('drag-over');
+            e.currentTarget.classList.remove('drag-over');
 
             if (draggedFromLibrary) {
                 console.log('Adding item to workspace:', draggedElement.dataset.name, draggedElement.dataset.type);
@@ -409,7 +433,9 @@
             document.querySelectorAll('.dragging').forEach(item => {
                 item.classList.remove('dragging');
             });
-            document.getElementById('workspace').classList.remove('drag-over');
+            document.querySelectorAll('.drag-over').forEach(item => {
+                item.classList.remove('drag-over');
+            });
             draggedElement = null;
             draggedFromLibrary = false;
         }
@@ -423,100 +449,231 @@
                 return;
             }
 
+            // Force clear the container first
+            workspaceItemsContainer.innerHTML = '';
+
             let emptyWorkspaceElement = emptyWorkspace;
             if (!emptyWorkspaceElement) {
-                // Create empty workspace element if not found
                 emptyWorkspaceElement = document.createElement('div');
                 emptyWorkspaceElement.className = 'empty-workspace';
                 emptyWorkspaceElement.id = 'emptyWorkspace';
-                emptyWorkspaceElement.innerHTML = 'Перетащите страницы и разделители<br>из библиотеки в эту область';
+                emptyWorkspaceElement.innerHTML = 'Перетащите элементы из библиотеки в эту область';
             }
 
-            if (workspaceItems.length === 0) {
+            // Combine existing pages and new workspace items
+            const allItems = [...existingPages.map(page => ({...page, isExisting: true})), ...workspaceItems];
+            console.log('Updating workspace with items:', allItems.length, 'existing pages:', existingPages.length, 'new items:', workspaceItems.length);
+
+            if (allItems.length === 0) {
                 emptyWorkspaceElement.style.display = 'block';
+                emptyWorkspaceElement.innerHTML = existingPages.length === 0 && workspaceItems.length === 0 
+                    ? 'Загрузка...' 
+                    : 'Перетащите элементы из библиотеки в эту область';
                 workspaceItemsContainer.innerHTML = '';
                 workspaceItemsContainer.appendChild(emptyWorkspaceElement);
                 return;
             }
 
             emptyWorkspaceElement.style.display = 'none';
-            workspaceItemsContainer.innerHTML = '';
 
-            workspaceItems.forEach((item, index) => {
+            allItems.forEach((item, index) => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'workspace-item';
                 itemEl.draggable = true;
                 itemEl.dataset.index = index;
-                itemEl.dataset.id = item.id;
-
-                // Different styling for separators
-                if (item.type === 'separator') {
+                
+                if (item.isExisting) {
+                    // Existing page
+                    itemEl.dataset.pageId = item.id;
                     itemEl.innerHTML = `
                         <div class="item-content">
                             <span class="drag-handle">⋮⋮</span>
-                            <span style="color: #9ca3af; font-style: italic;">${item.name}</span>
+                            <span class="page-name" data-page-id="${item.id}">${item.name}</span>
                         </div>
                         <div class="item-actions">
-                            <button class="btn-small danger">✕</button>
+                            <button class="btn-small edit-btn" title="Переименовать">✎</button>
+                            <button class="btn-small danger delete-btn" title="Удалить">✕</button>
                         </div>
                     `;
-                    itemEl.style.borderLeft = '4px solid #e5e7eb';
-                    itemEl.style.background = '#f9fafb';
+
+                    // Add event listeners for existing pages
+                    const deleteBtn = itemEl.querySelector('.delete-btn');
+                    const editBtn = itemEl.querySelector('.edit-btn');
+                    const pageName = itemEl.querySelector('.page-name');
+
+                    if (deleteBtn) {
+                        deleteBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            deletePage(item.id);
+                        });
+                    }
+
+                    if (editBtn) {
+                        editBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            startRename(pageName, item.id);
+                        });
+                    }
+
                 } else {
-                    itemEl.innerHTML = `
-                        <div class="item-content">
-                            <span class="drag-handle">⋮⋮</span>
-                            <span>${item.name}</span>
-                        </div>
-                        <div class="item-actions">
-                            <button class="btn-small danger">✕</button>
-                        </div>
-                    `;
+                    // New item
+                    itemEl.dataset.id = item.id;
+                    
+                    if (item.type === 'separator') {
+                        itemEl.innerHTML = `
+                            <div class="item-content">
+                                <span class="drag-handle">⋮⋮</span>
+                                <span style="color: #9ca3af; font-style: italic;">${item.name}</span>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-small danger">✕</button>
+                            </div>
+                        `;
+                        itemEl.style.background = '#f9fafb';
+                    } else {
+                        itemEl.innerHTML = `
+                            <div class="item-content">
+                                <span class="drag-handle">⋮⋮</span>
+                                <span>${item.name}</span>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-small danger">✕</button>
+                            </div>
+                        `;
+                    }
+
+                    // Add remove button event listener
+                    const removeBtn = itemEl.querySelector('.btn-small.danger');
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            removeItem(item.id);
+                        });
+                    }
                 }
 
-                // Add remove button event listener
-                const removeBtn = itemEl.querySelector('.btn-small.danger');
-                if (removeBtn) {
-                    removeBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        removeItem(item.id);
-                    });
-                }
-
-                // Add drag events for workspace items
-                itemEl.addEventListener('dragstart', handleWorkspaceDragStart);
-                itemEl.addEventListener('dragover', handleWorkspaceItemDragOver);
-                itemEl.addEventListener('drop', handleWorkspaceItemDrop);
+                // Add unified drag events for all items
+                itemEl.addEventListener('dragstart', handleUnifiedDragStart);
+                itemEl.addEventListener('dragover', handleUnifiedDragOver);
+                itemEl.addEventListener('drop', handleUnifiedDrop);
                 itemEl.addEventListener('dragend', handleDragEnd);
 
-                if (workspaceItemsContainer) {
-                    workspaceItemsContainer.appendChild(itemEl);
-                }
+                workspaceItemsContainer.appendChild(itemEl);
             });
         }
 
-        function handleWorkspaceItemDragOver(e) {
-            if (!draggedFromLibrary) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                this.classList.add('drag-over');
-            }
+
+
+
+
+        function handleUnifiedDragStart(e) {
+            draggedElement = this;
+            draggedFromLibrary = false;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
         }
 
-        function handleWorkspaceItemDrop(e) {
+        function handleUnifiedDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        }
+
+        function handleUnifiedDrop(e) {
             e.preventDefault();
             this.classList.remove('drag-over');
 
             if (!draggedFromLibrary && draggedElement !== this) {
                 const draggedIndex = parseInt(draggedElement.dataset.index);
                 const targetIndex = parseInt(this.dataset.index);
-
-                // Reorder items
-                const draggedItem = workspaceItems.splice(draggedIndex, 1)[0];
-                workspaceItems.splice(targetIndex, 0, draggedItem);
-
-                updateWorkspace();
+                
+                if (draggedIndex === targetIndex) return;
+                
+                // If dragging an existing page - only allow reordering within existing pages
+                if (draggedElement.dataset.pageId && this.dataset.pageId) {
+                    const pageId = draggedElement.dataset.pageId;
+                    parent.postMessage({
+                        pluginMessage: {
+                            type: 'reorder-page',
+                            pageId: pageId,
+                            newIndex: targetIndex
+                        }
+                    }, '*');
+                }
+                // If dragging a new item - only allow reordering within new items
+                else if (draggedElement.dataset.id && this.dataset.id) {
+                    const draggedItemIndex = draggedIndex - existingPages.length;
+                    const targetItemIndex = targetIndex - existingPages.length;
+                    
+                    const draggedItem = workspaceItems.splice(draggedItemIndex, 1)[0];
+                    workspaceItems.splice(targetItemIndex, 0, draggedItem);
+                    updateWorkspace();
+                }
             }
+        }
+
+        function deletePage(pageId) {
+            if (confirm('Вы уверены, что хотите удалить эту страницу?')) {
+                console.log('Deleting page with ID:', pageId);
+                
+                // Optimistically remove the page from UI immediately
+                existingPages = existingPages.filter(page => page.id !== pageId);
+                updateWorkspace();
+                
+                parent.postMessage({
+                    pluginMessage: {
+                        type: 'delete-page',
+                        pageId: pageId
+                    }
+                }, '*');
+            }
+        }
+
+        function startRename(nameElement, pageId) {
+            const currentName = nameElement.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.style.cssText = `
+                background: white;
+                border: 1px solid #2563eb;
+                border-radius: 4px;
+                padding: 2px 6px;
+                font-size: inherit;
+                font-family: inherit;
+                width: 100%;
+                outline: none;
+            `;
+
+            nameElement.style.display = 'none';
+            nameElement.parentNode.insertBefore(input, nameElement);
+            input.focus();
+            input.select();
+
+            function finishRename() {
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    parent.postMessage({
+                        pluginMessage: {
+                            type: 'rename-page',
+                            pageId: pageId,
+                            newName: newName
+                        }
+                    }, '*');
+                }
+                input.remove();
+                nameElement.style.display = '';
+            }
+
+            input.addEventListener('blur', finishRename);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    finishRename();
+                } else if (e.key === 'Escape') {
+                    input.remove();
+                    nameElement.style.display = '';
+                }
+            });
         }
 
         function removeItem(id) {
@@ -533,9 +690,14 @@
 
         function createPages() {
             if (workspaceItems.length === 0) {
-                alert('Добавьте элементы в рабочую область');
+                alert('Добавьте новые элементы в рабочую область');
                 return;
             }
+
+            console.log('Creating pages with items:', workspaceItems);
+            workspaceItems.forEach((item, index) => {
+                console.log(`Item ${index}:`, item);
+            });
 
             parent.postMessage({
                 pluginMessage: {
@@ -544,6 +706,9 @@
                     duplicateMode: 'skip'
                 }
             }, '*');
+
+            // Clear workspace after creating pages
+            clearWorkspace();
         }
 
 
@@ -557,3 +722,4 @@
 </script>
 </body>
 </html>
+
