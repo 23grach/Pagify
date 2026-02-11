@@ -166,9 +166,6 @@ class PageManager {
       
       console.log(`Page "${pageName}" deleted successfully`);
       NotificationService.send(`Page "${pageName}" deleted`, 'success');
-      
-      console.log('Sending updated pages list to UI');
-      this.sendExistingPagesAfterDelete(pageIdToDelete);
     } catch (error) {
       console.error('Error deleting page:', error);
       NotificationService.send('Error deleting page', 'error');
@@ -191,8 +188,6 @@ class PageManager {
       const currentIndex = figma.root.children.indexOf(pageToMove);
       if (currentIndex !== -1 && currentIndex !== newIndex) {
         figma.root.insertChild(newIndex, pageToMove);
-        NotificationService.send('Page moved', 'success');
-        this.sendExistingPages();
       }
     } catch (error) {
       console.error('Error moving page:', error);
@@ -218,7 +213,6 @@ class PageManager {
       
       console.log(`Page renamed from "${oldName}" to "${newName}"`);
       NotificationService.send(`Page renamed to "${newName}"`, 'success');
-      this.sendExistingPages();
     } catch (error) {
       console.error('Error renaming page:', error);
       NotificationService.send('Error renaming page', 'error');

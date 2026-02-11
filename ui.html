@@ -91,7 +91,7 @@
             background: #ffffff;
             border-radius: 8px;
             border: 1px solid #e5e7eb;
-            transition: all 0.15s ease;
+            transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             cursor: grab;
         }
@@ -133,6 +133,17 @@
             background: #2563eb;
             border-radius: 999px;
             margin: 2px 0;
+        }
+
+        @keyframes workspaceItemEnter {
+            from {
+                transform: translateY(4px);
+                opacity: 0.95;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .item-actions {
@@ -211,15 +222,6 @@
             background: #9ca3af;
         }
 
-        /* Animation for smooth transitions */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .workspace-item {
-            animation: fadeIn 0.2s ease;
-        }
     </style>
 </head>
 <body>
@@ -390,6 +392,7 @@
             allItems.forEach((item, index) => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'workspace-item';
+                itemEl.style.animation = 'workspaceItemEnter 0.12s ease-out';
                 itemEl.dataset.index = index;
                 
                 if (item.isExisting) {
@@ -547,7 +550,7 @@
             // Update arrays
             existingPages = newExistingPages;
             
-            // Send reorder messages for existing pages
+            // Send reorder messages for all pages to keep Figma in sync
             newExistingPages.forEach((page, newIndex) => {
                 parent.postMessage({
                     pluginMessage: {
@@ -795,7 +798,8 @@
         }
 
         function startRename(nameElement, pageId) {
-            const currentName = nameElement.textContent;
+            const pageFromState = existingPages.find(page => page.id === pageId);
+            const currentName = pageFromState ? pageFromState.name : nameElement.textContent;
             const input = document.createElement('input');
             input.type = 'text';
             input.value = currentName;
@@ -823,6 +827,13 @@
                 
                 const newName = input.value.trim();
                 if (newName && newName !== currentName) {
+                    // Optimistically update local state and UI text
+                    const page = existingPages.find(page => page.id === pageId);
+                    if (page) {
+                        page.name = newName;
+                    }
+                    nameElement.textContent = newName;
+
                     parent.postMessage({
                         pluginMessage: {
                             type: 'rename-page',
