@@ -93,6 +93,7 @@
             border: 1px solid #e5e7eb;
             transition: all 0.15s ease;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            cursor: grab;
         }
 
         .workspace-item:hover {
@@ -107,6 +108,31 @@
             display: flex;
             align-items: center;
             gap: 12px;
+        }
+
+        .page-name {
+            cursor: text;
+            border-radius: 4px;
+            padding: 2px 4px;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .page-name:hover {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .workspace-item.dragging {
+            opacity: 0.9;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+            cursor: grabbing;
+        }
+
+        .drop-indicator {
+            height: 2px;
+            background: #2563eb;
+            border-radius: 999px;
+            margin: 2px 0;
         }
 
         .item-actions {
@@ -139,11 +165,6 @@
             color: #dc2626;
         }
 
-        .btn-small.edit-btn:hover {
-            background: #dbeafe;
-            color: #2563eb;
-        }
-
         .move-up, .move-down {
             background: #f3f4f6 !important;
             color: #6b7280 !important;
@@ -170,58 +191,6 @@
             border-radius: 12px;
             background: #f9fafb;
         }
-
-        .library {
-            background: #ffffff;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            padding: 12px;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .library-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .library-items {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 6px;
-        }
-
-        .library-item {
-            padding: 8px 6px;
-            background: #f8fafc;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 500;
-            transition: all 0.15s ease;
-            user-select: none;
-            text-align: center;
-            min-height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #475569;
-        }
-
-        .library-item:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-
-
-
 
         /* Scrollbar styling */
         ::-webkit-scrollbar {
@@ -268,52 +237,17 @@
                     </div>
                 </div>
             </div>
-
-            <div class="library">
-                <div class="library-title">Elements</div>
-                <div class="library-items" id="pageLibrary">
-                    <div class="library-item" data-type="page" data-name="📱 App">📱 App</div>
-                    <div class="library-item" data-type="page" data-name="💻 Desktop">💻 Desktop</div>
-                    <div class="library-item" data-type="page" data-name="🧩 Components">🧩 Components</div>
-                    <div class="library-item" data-type="page" data-name="✨ Icons">✨ Icons</div>
-                    <div class="library-item" data-type="page" data-name="✏️ Styles">✏️ Styles</div>
-                    <div class="library-item" data-type="page" data-name="🎨 Design Tokens">🎨 Design Tokens</div>
-                    <div class="library-item" data-type="page" data-name="🔠 Typography">🔠 Typography</div>
-                    <div class="library-item" data-type="page" data-name="🎛 UI Kit">🎛 UI Kit</div>
-                    <div class="library-item" data-type="page" data-name="🗂 Layouts">🗂 Layouts</div>
-                    <div class="library-item" data-type="page" data-name="🧱 Grids">🧱 Grids</div>
-                    <div class="library-item" data-type="page" data-name="🎯 Spacing">🎯 Spacing</div>
-                    <div class="library-item" data-type="page" data-name="🔤 Naming Rules">🔤 Naming Rules</div>
-                    <div class="library-item" data-type="page" data-name="🧾 References">🧾 References</div>
-                    <div class="library-item" data-type="page" data-name="📐 Wireframes">📐 Wireframes</div>
-                    <div class="library-item" data-type="page" data-name="🧪 Experiments">🧪 Experiments</div>
-                    <div class="library-item" data-type="page" data-name="💬 UX Copy">💬 UX Copy</div>
-                    <div class="library-item" data-type="page" data-name="📄 Docs">📄 Docs</div>
-                    <div class="library-item" data-type="page" data-name="💻 Dev Handoff">💻 Dev Handoff</div>
-                    <div class="library-item" data-type="page" data-name="🧬 Tokens JSON">🧬 Tokens JSON</div>
-                    <div class="library-item" data-type="page" data-name="🧾 Spec Sheets">🧾 Spec Sheets</div>
-                    <div class="library-item" data-type="page" data-name="🖼 Thumbnail">🖼 Thumbnail</div>
-                    <div class="library-item" data-type="page" data-name="🧷 Logify">🧷 Logify</div>
-                    <div class="library-item" data-type="page" data-name="🧩 Plugins">🧩 Plugins</div>
-                    <div class="library-item" data-type="page" data-name="🪄 Showcase">🪄 Showcase</div>
-                    <div class="library-item" data-type="page" data-name="🏁 Final">🏁 Final</div>
-                    <div class="library-item" data-type="page" data-name="📁 Archive">📁 Archive</div>
-                    <div class="library-item" data-type="page" data-name="🗑️ Trash">🗑️ Trash</div>
-                    <div class="library-item" data-type="separator" data-name="──────">──────</div>
-                </div>
-            </div>
-
-
         </div>
     </div>
 
 <script>
-        let workspaceItems = [];
         let existingPages = [];
+        let draggedPageId = null;
+        let dropIndicator = null;
+        let workspaceDnDInitialized = false;
 
         // Initialize the plugin
         function init() {
-            setupLibraryItems();
             setupEventListeners();
             updateWorkspace();
             setupMessageListener();
@@ -334,35 +268,70 @@
             });
         }
 
-        function setupLibraryItems() {
-            // Library items click to add
-            document.querySelectorAll('.library-item').forEach(item => {
-                item.addEventListener('click', handleLibraryItemClick);
-                item.style.cursor = 'pointer';
-            });
-        }
-
         function setupEventListeners() {
             // Event listeners are now handled individually for each item
         }
 
-        function handleLibraryItemClick(e) {
-            console.log('Creating page directly:', this.dataset.name, this.dataset.type);
-            // Create page directly without adding to workspace
-            const newItem = {
-                id: Date.now() + Math.random(),
-                type: this.dataset.type,
-                name: this.dataset.name
-            };
-            
-            console.log('Creating page with item:', newItem);
-            parent.postMessage({
-                pluginMessage: {
-                    type: 'create-pages',
-                    items: [newItem],
-                    duplicateMode: 'skip'
+        function setupWorkspaceDnD() {
+            if (workspaceDnDInitialized) return;
+            const container = document.getElementById('workspaceItems');
+            if (!container) return;
+
+            container.addEventListener('dragover', (e) => {
+                // Allow drop when dragging over the gap / drop indicator itself
+                if (draggedPageId && dropIndicator) {
+                    e.preventDefault();
                 }
-            }, '*');
+            });
+
+            container.addEventListener('drop', (e) => {
+                // Handle drop on the drop-indicator or empty gaps
+                if (!draggedPageId || !dropIndicator) return;
+                e.preventDefault();
+
+                const position = dropIndicator.dataset.dropPosition || 'before';
+                const targetIndexRaw = dropIndicator.dataset.targetIndex;
+                const targetIndex = targetIndexRaw ? parseInt(targetIndexRaw, 10) : 0;
+
+                const allItems = [...existingPages.map(page => ({ ...page, isExisting: true }))];
+                const from = allItems.findIndex(p => p.id === draggedPageId);
+                if (from === -1) {
+                    // Safety: nothing to move
+                    cleanupDropState();
+                    return;
+                }
+
+                let to = targetIndex;
+                if (position === 'after') {
+                    to = targetIndex + 1;
+                }
+
+                const [moved] = allItems.splice(from, 1);
+
+                if (from < to) {
+                    to = to - 1;
+                }
+                if (to < 0) {
+                    to = 0;
+                }
+                if (to > allItems.length) {
+                    to = allItems.length;
+                }
+
+                allItems.splice(to, 0, moved);
+                updateItemsOrder(allItems);
+                cleanupDropState();
+            });
+
+            workspaceDnDInitialized = true;
+        }
+
+        function cleanupDropState() {
+            draggedPageId = null;
+            if (dropIndicator && dropIndicator.parentNode) {
+                dropIndicator.parentNode.removeChild(dropIndicator);
+            }
+            dropIndicator = null;
         }
 
         function handleDragEnd(e) {
@@ -394,23 +363,23 @@
             // Force clear the container first
             workspaceItemsContainer.innerHTML = '';
 
+            // Make sure container-level DnD is wired once
+            setupWorkspaceDnD();
+
             let emptyWorkspaceElement = emptyWorkspace;
             if (!emptyWorkspaceElement) {
                 emptyWorkspaceElement = document.createElement('div');
                 emptyWorkspaceElement.className = 'empty-workspace';
                 emptyWorkspaceElement.id = 'emptyWorkspace';
-                emptyWorkspaceElement.innerHTML = 'Drag elements from the library to this area';
+                emptyWorkspaceElement.innerHTML = 'No pages yet';
             }
 
-            // Combine existing pages and new workspace items
-            const allItems = [...existingPages.map(page => ({...page, isExisting: true})), ...workspaceItems];
-            console.log('Updating workspace with items:', allItems.length, 'existing pages:', existingPages.length, 'new items:', workspaceItems.length);
+            const allItems = existingPages.map(page => ({...page, isExisting: true}));
+            console.log('Updating workspace with items:', allItems.length, 'existing pages:', existingPages.length);
 
             if (allItems.length === 0) {
                 emptyWorkspaceElement.style.display = 'block';
-                emptyWorkspaceElement.innerHTML = existingPages.length === 0 && workspaceItems.length === 0 
-                    ? 'Loading...' 
-                    : 'Drag elements from the library to this area';
+                emptyWorkspaceElement.innerHTML = 'No pages yet';
                 workspaceItemsContainer.innerHTML = '';
                 workspaceItemsContainer.appendChild(emptyWorkspaceElement);
                 return;
@@ -431,18 +400,12 @@
                             <span class="page-name" data-page-id="${item.id}">${item.name}</span>
                         </div>
                         <div class="item-actions">
-                            ${index > 0 ? '<button class="btn-small move-up" title="Move Up">↑</button>' : ''}
-                            ${index < allItems.length - 1 ? '<button class="btn-small move-down" title="Move Down">↓</button>' : ''}
-                            <button class="btn-small edit-btn" title="Rename">✎</button>
                             <button class="btn-small danger delete-btn" title="Delete">✕</button>
                         </div>
                     `;
 
                     // Add event listeners for existing pages
                     const deleteBtn = itemEl.querySelector('.delete-btn');
-                    const editBtn = itemEl.querySelector('.edit-btn');
-                    const moveUpBtn = itemEl.querySelector('.move-up');
-                    const moveDownBtn = itemEl.querySelector('.move-down');
                     const pageName = itemEl.querySelector('.page-name');
 
                     if (deleteBtn) {
@@ -452,81 +415,108 @@
                         });
                     }
 
-                    if (editBtn) {
-                        editBtn.addEventListener('click', (e) => {
+                    if (pageName) {
+                        pageName.addEventListener('click', (e) => {
                             e.stopPropagation();
                             startRename(pageName, item.id);
                         });
                     }
 
-                    if (moveUpBtn) {
-                        moveUpBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            moveItemUp(index);
-                        });
-                    }
+                    // Drag & drop reordering
+                    itemEl.draggable = true;
 
-                    if (moveDownBtn) {
-                        moveDownBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            moveItemDown(index);
-                        });
-                    }
+                    itemEl.addEventListener('dragstart', (e) => {
+                        draggedPageId = item.id;
+                        itemEl.classList.add('dragging');
+                        if (e.dataTransfer) {
+                            e.dataTransfer.effectAllowed = 'move';
+                            e.dataTransfer.setData('text/plain', String(index));
+                        }
+                    });
 
-                } else {
-                    // New item
-                    itemEl.dataset.id = item.id;
-                    
-                    if (item.type === 'separator') {
-                        itemEl.innerHTML = `
-                            <div class="item-content">
-                                <span style="color: #9ca3af; font-style: italic;">${item.name}</span>
-                            </div>
-                            <div class="item-actions">
-                                ${index > 0 ? '<button class="btn-small move-up" title="Move Up">↑</button>' : ''}
-                                ${index < allItems.length - 1 ? '<button class="btn-small move-down" title="Move Down">↓</button>' : ''}
-                                <button class="btn-small danger">✕</button>
-                            </div>
-                        `;
-                        itemEl.style.background = '#f9fafb';
-                    } else {
-                        itemEl.innerHTML = `
-                            <div class="item-content">
-                                <span>${item.name}</span>
-                            </div>
-                            <div class="item-actions">
-                                ${index > 0 ? '<button class="btn-small move-up" title="Move Up">↑</button>' : ''}
-                                ${index < allItems.length - 1 ? '<button class="btn-small move-down" title="Move Down">↓</button>' : ''}
-                                <button class="btn-small danger">✕</button>
-                            </div>
-                        `;
-                    }
+                    itemEl.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        if (!draggedPageId || draggedPageId === item.id) {
+                            return;
+                        }
 
-                    // Add event listeners for new items
-                    const removeBtn = itemEl.querySelector('.btn-small.danger');
-                    const moveUpBtn = itemEl.querySelector('.move-up');
-                    const moveDownBtn = itemEl.querySelector('.move-down');
+                        // Create drop indicator if needed
+                        if (!dropIndicator) {
+                            dropIndicator = document.createElement('div');
+                            dropIndicator.className = 'drop-indicator';
+                        }
 
-                    if (removeBtn) {
-                        removeBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            removeItem(item.id);
-                        });
-                    }
+                        const rect = itemEl.getBoundingClientRect();
+                        const isBefore = e.clientY < rect.top + rect.height / 2;
 
-                    if (moveUpBtn) {
-                        moveUpBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            moveItemUp(index);
-                        });
-                    }
+                        const container = workspaceItemsContainer;
+                        if (!container) {
+                            return;
+                        }
 
-                    if (moveDownBtn) {
-                        moveDownBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            moveItemDown(index);
-                        });
-                    }
+                        if (isBefore) {
+                            container.insertBefore(dropIndicator, itemEl);
+                            dropIndicator.dataset.dropPosition = 'before';
+                            dropIndicator.dataset.targetIndex = String(index);
+                        } else {
+                            if (itemEl.nextSibling) {
+                                container.insertBefore(dropIndicator, itemEl.nextSibling);
+                            } else {
+                                container.appendChild(dropIndicator);
+                            }
+                            dropIndicator.dataset.dropPosition = 'after';
+                            dropIndicator.dataset.targetIndex = String(index);
+                        }
+
+                        if (e.dataTransfer) {
+                            e.dataTransfer.dropEffect = 'move';
+                        }
+                    });
+
+                    itemEl.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        if (!draggedPageId || !dropIndicator) {
+                            return;
+                        }
+
+                        const position = dropIndicator.dataset.dropPosition || 'before';
+                        const targetIndexRaw = dropIndicator.dataset.targetIndex;
+                        const targetIndex = targetIndexRaw ? parseInt(targetIndexRaw, 10) : index;
+
+                        const allItems = [...existingPages.map(page => ({ ...page, isExisting: true }))];
+
+                        const from = allItems.findIndex(p => p.id === draggedPageId);
+                        let to = targetIndex;
+
+                        if (position === 'after') {
+                            to = targetIndex + 1;
+                        }
+
+                        const [moved] = allItems.splice(from, 1);
+
+                        if (from < to) {
+                            to = to - 1;
+                        }
+
+                        if (to < 0) {
+                            to = 0;
+                        }
+                        if (to > allItems.length) {
+                            to = allItems.length;
+                        }
+
+                        allItems.splice(to, 0, moved);
+
+                        updateItemsOrder(allItems);
+                        cleanupDropState();
+                    });
+
+                    itemEl.addEventListener('dragend', () => {
+                        itemEl.classList.remove('dragging');
+                        cleanupDropState();
+                    });
                 }
 
                 workspaceItemsContainer.appendChild(itemEl);
@@ -539,34 +529,9 @@
 
 
 
-        function moveItemUp(index) {
-            if (index <= 0) return; // Already at the top
-            
-            // Create combined array of all items
-            const allItems = [...existingPages.map(page => ({...page, isExisting: true})), ...workspaceItems];
-            
-            // Swap with previous item
-            [allItems[index], allItems[index - 1]] = [allItems[index - 1], allItems[index]];
-            
-            updateItemsOrder(allItems);
-        }
-
-        function moveItemDown(index) {
-            // Create combined array of all items
-            const allItems = [...existingPages.map(page => ({...page, isExisting: true})), ...workspaceItems];
-            
-            if (index >= allItems.length - 1) return; // Already at the bottom
-            
-            // Swap with next item
-            [allItems[index], allItems[index + 1]] = [allItems[index + 1], allItems[index]];
-            
-            updateItemsOrder(allItems);
-        }
-
         function updateItemsOrder(allItems) {
             // Separate back into existing pages and new items
             const newExistingPages = [];
-            const newWorkspaceItems = [];
             
             allItems.forEach((item) => {
                 if (item.isExisting) {
@@ -576,14 +541,11 @@
                         index: newExistingPages.length,
                         type: 'page'
                     });
-                } else {
-                    newWorkspaceItems.push(item);
                 }
             });
             
             // Update arrays
             existingPages = newExistingPages;
-            workspaceItems = newWorkspaceItems;
             
             // Send reorder messages for existing pages
             newExistingPages.forEach((page, newIndex) => {
@@ -888,14 +850,9 @@
 
         function removeItem(id) {
             console.log('Removing item with id:', id);
-            workspaceItems = workspaceItems.filter(item => item.id !== id);
-            console.log('Workspace items count after removal:', workspaceItems.length);
-            updateWorkspace();
         }
 
         function clearWorkspace() {
-            workspaceItems = [];
-            updateWorkspace();
         }
 
         function createPages() {

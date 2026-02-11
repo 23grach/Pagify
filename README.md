@@ -13,5 +13,3 @@ No more cluttered page panels or manual organization. Just drag, drop, and struc
 - Bulk page operations for efficiency
 
 Simple. Organized. Built for designers. Keep your files structured.
-
-
