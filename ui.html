@@ -27,12 +27,72 @@
             background: #fdfdfd;
         }
 
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
         .header h2 {
             font-size: 20px;
             font-weight: 600;
             color: #1a1a1a;
             margin: 0;
             letter-spacing: -0.01em;
+        }
+
+        .bulk-toggle-btn {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            color: #4b5563;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .bulk-toggle-btn:hover {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+        }
+
+        .bulk-toggle-btn.active {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            color: #eff6ff;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.24);
+        }
+
+        .bulk-select-all-btn {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.15s ease, background-color 0.15s ease;
+        }
+
+        .bulk-select-all-btn:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .bulk-select-all-btn.hidden {
+            display: none;
         }
 
         .content {
@@ -128,6 +188,15 @@
             cursor: grabbing;
         }
 
+        .workspace-item.selected {
+            border-color: #1d4ed8;
+            background: #eff6ff;
+        }
+
+        .workspace-item.selected .page-name {
+            color: #1d4ed8;
+        }
+
         .drop-indicator {
             height: 2px;
             background: #2563eb;
@@ -203,6 +272,103 @@
             background: #f9fafb;
         }
 
+        .bulk-footer {
+            display: none;
+            position: fixed;
+            left: 50%;
+            bottom: 12px;
+            transform: translateX(-50%);
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.96);
+            color: #e5e7eb;
+            font-size: 12px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+            z-index: 1000;
+        }
+
+        .bulk-footer-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bulk-footer-count {
+            font-weight: 500;
+        }
+
+        .bulk-footer-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bulk-text-input {
+            min-width: 140px;
+            max-width: 220px;
+            padding: 6px 8px;
+            border-radius: 999px;
+            border: 1px solid #4b5563;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 11px;
+            outline: none;
+        }
+
+        .bulk-text-input::placeholder {
+            color: #6b7280;
+        }
+
+        .bulk-text-input:focus {
+            border-color: #bfdbfe;
+        }
+
+        .bulk-apply-btn,
+        .bulk-remove-btn,
+        .bulk-delete-btn {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: none;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease, opacity 0.15s ease;
+        }
+
+        .bulk-apply-btn {
+            background: #1d4ed8;
+            color: #eff6ff;
+        }
+
+        .bulk-apply-btn:hover:not(:disabled) {
+            background: #1e40af;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.45);
+            transform: translateY(-0.5px);
+        }
+
+        .bulk-delete-btn {
+            background: #ef4444;
+            color: #fef2f2;
+        }
+
+        .bulk-delete-btn:hover:not(:disabled) {
+            background: #dc2626;
+            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.45);
+            transform: translateY(-0.5px);
+        }
+
+        .bulk-apply-btn:disabled,
+        .bulk-remove-btn:disabled,
+        .bulk-delete-btn:disabled {
+            background: #6b7280;
+            cursor: default;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
         /* Scrollbar styling */
         ::-webkit-scrollbar {
             width: 6px;
@@ -226,7 +392,13 @@
 </head>
 <body>
     <div class="header">
-        <h2>Pagify</h2>
+        <div class="header-row">
+            <h2>Pagify</h2>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button id="bulkSelectAll" class="bulk-select-all-btn hidden">Select all</button>
+                <button id="bulkToggle" class="bulk-toggle-btn">Bulk edit</button>
+            </div>
+        </div>
     </div>
 
     <div class="content">
@@ -238,6 +410,23 @@
                         Loading...
                     </div>
                 </div>
+                <div class="bulk-footer" id="bulkFooter">
+                    <div class="bulk-footer-left">
+                        <span class="bulk-footer-count" id="bulkSelectionLabel">0 selected</span>
+                    </div>
+                    <div class="bulk-footer-actions">
+                        <input
+                            id="bulkTextInput"
+                            class="bulk-text-input"
+                            type="text"
+                            placeholder="Text to add or remove"
+                        />
+                        <button class="bulk-apply-btn" id="bulkPrefixBtn" disabled>Add to start</button>
+                        <button class="bulk-apply-btn" id="bulkSuffixBtn" disabled>Add to end</button>
+                        <button class="bulk-remove-btn" id="bulkRemoveBtn" disabled>Remove text</button>
+                        <button class="bulk-delete-btn" id="bulkDeleteBtn" disabled>Delete Selected</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -247,6 +436,8 @@
         let draggedPageId = null;
         let dropIndicator = null;
         let workspaceDnDInitialized = false;
+        let isBulkMode = false;
+        const selectedPageIds = new Set();
 
         // Initialize the plugin
         function init() {
@@ -271,7 +462,57 @@
         }
 
         function setupEventListeners() {
-            // Event listeners are now handled individually for each item
+            const bulkToggle = document.getElementById('bulkToggle');
+            const bulkSelectAll = document.getElementById('bulkSelectAll');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const bulkPrefixBtn = document.getElementById('bulkPrefixBtn');
+            const bulkSuffixBtn = document.getElementById('bulkSuffixBtn');
+            const bulkRemoveBtn = document.getElementById('bulkRemoveBtn');
+            const bulkTextInput = document.getElementById('bulkTextInput');
+
+            if (bulkToggle) {
+                bulkToggle.addEventListener('click', () => {
+                    toggleBulkMode();
+                });
+            }
+
+            if (bulkSelectAll) {
+                bulkSelectAll.addEventListener('click', () => {
+                    handleSelectAll();
+                });
+            }
+
+            if (bulkDeleteBtn) {
+                bulkDeleteBtn.addEventListener('click', () => {
+                    handleBulkDelete();
+                });
+            }
+
+            if (bulkPrefixBtn) {
+                bulkPrefixBtn.addEventListener('click', () => {
+                    handleBulkRename('prefix');
+                });
+            }
+
+            if (bulkSuffixBtn) {
+                bulkSuffixBtn.addEventListener('click', () => {
+                    handleBulkRename('suffix');
+                });
+            }
+
+            if (bulkRemoveBtn) {
+                bulkRemoveBtn.addEventListener('click', () => {
+                    handleBulkRemove();
+                });
+            }
+
+            if (bulkTextInput) {
+                bulkTextInput.addEventListener('input', () => {
+                    updateBulkControls();
+                });
+            }
+
+            updateBulkControls();
         }
 
         function setupWorkspaceDnD() {
@@ -326,6 +567,218 @@
             });
 
             workspaceDnDInitialized = true;
+        }
+
+        function updateBulkControls() {
+            const bulkToggle = document.getElementById('bulkToggle');
+            const bulkSelectAll = document.getElementById('bulkSelectAll');
+            const bulkFooter = document.getElementById('bulkFooter');
+            const bulkSelectionLabel = document.getElementById('bulkSelectionLabel');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const bulkPrefixBtn = document.getElementById('bulkPrefixBtn');
+            const bulkSuffixBtn = document.getElementById('bulkSuffixBtn');
+            const bulkRemoveBtn = document.getElementById('bulkRemoveBtn');
+            const bulkTextInput = document.getElementById('bulkTextInput');
+            const selectedCount = selectedPageIds.size;
+            const textValue = bulkTextInput ? bulkTextInput.value : '';
+            const hasText = !!textValue;
+
+            if (bulkToggle) {
+                bulkToggle.classList.toggle('active', isBulkMode);
+                bulkToggle.textContent = isBulkMode ? 'Bulk edit on' : 'Bulk edit';
+            }
+
+            if (bulkSelectAll) {
+                bulkSelectAll.classList.toggle('hidden', !isBulkMode);
+            }
+
+            if (bulkFooter) {
+                bulkFooter.style.display = isBulkMode ? 'flex' : 'none';
+            }
+
+            if (bulkSelectionLabel) {
+                bulkSelectionLabel.textContent = `${selectedCount} selected`;
+            }
+
+            if (bulkDeleteBtn) {
+                bulkDeleteBtn.disabled = !isBulkMode || selectedCount === 0;
+            }
+            
+            const canApplyText = isBulkMode && selectedCount > 0 && hasText;
+
+            if (bulkPrefixBtn) {
+                bulkPrefixBtn.disabled = !canApplyText;
+            }
+
+            if (bulkSuffixBtn) {
+                bulkSuffixBtn.disabled = !canApplyText;
+            }
+
+            if (bulkRemoveBtn) {
+                bulkRemoveBtn.disabled = !canApplyText;
+            }
+        }
+
+        function toggleBulkMode() {
+            isBulkMode = !isBulkMode;
+
+            if (!isBulkMode) {
+                selectedPageIds.clear();
+            }
+
+            updateBulkControls();
+            updateWorkspace();
+        }
+
+        function togglePageSelection(pageId) {
+            if (!isBulkMode || !pageId) return;
+
+            if (selectedPageIds.has(pageId)) {
+                selectedPageIds.delete(pageId);
+            } else {
+                selectedPageIds.add(pageId);
+            }
+
+            // Update row styles without full rerender
+            const row = document.querySelector(`.workspace-item[data-page-id="${pageId}"]`);
+            if (row) {
+                row.classList.toggle('selected', selectedPageIds.has(pageId));
+            }
+
+            updateBulkControls();
+        }
+
+        function handleSelectAll() {
+            if (!isBulkMode) return;
+
+            if (selectedPageIds.size === existingPages.length) {
+                // If everything is already selected, clear selection
+                selectedPageIds.clear();
+            } else {
+                selectedPageIds.clear();
+                existingPages.forEach(page => {
+                    selectedPageIds.add(page.id);
+                });
+            }
+
+            // Update row styles
+            document.querySelectorAll('.workspace-item[data-page-id]').forEach((row) => {
+                const pageId = row.getAttribute('data-page-id');
+                if (!pageId) return;
+                row.classList.toggle('selected', selectedPageIds.has(pageId));
+            });
+
+            updateBulkControls();
+        }
+
+        function handleBulkDelete() {
+            if (!isBulkMode || selectedPageIds.size === 0) return;
+
+            const idsToDelete = Array.from(selectedPageIds);
+            const count = idsToDelete.length;
+
+            showConfirmDialog(
+                `Delete ${count} selected page${count === 1 ? '' : 's'}?`,
+                'This action cannot be undone.',
+                () => {
+                    // Optimistically update local state
+                    const idSet = new Set(idsToDelete);
+                    existingPages = existingPages.filter(page => !idSet.has(page.id));
+                    selectedPageIds.clear();
+                    updateWorkspace();
+                    updateBulkControls();
+
+                    // Send delete messages
+                    idsToDelete.forEach(pageId => {
+                        parent.postMessage({
+                            pluginMessage: {
+                                type: 'delete-page',
+                                pageId
+                            }
+                        }, '*');
+                    });
+                }
+            );
+        }
+
+        function handleBulkRename(mode) {
+            if (!isBulkMode || selectedPageIds.size === 0) return;
+            const bulkTextInput = document.getElementById('bulkTextInput');
+            if (!bulkTextInput) return;
+
+            const rawText = bulkTextInput.value;
+            if (!rawText) return;
+
+            const ids = Array.from(selectedPageIds);
+
+            ids.forEach(pageId => {
+                const page = existingPages.find(p => p.id === pageId);
+                if (!page) return;
+
+                const baseName = page.name || '';
+                const newName = mode === 'prefix' ? rawText + baseName : baseName + rawText;
+
+                if (newName === baseName) return;
+
+                // Update local state
+                page.name = newName;
+
+                // Update UI element if present
+                const label = document.querySelector(`.page-name[data-page-id="${pageId}"]`);
+                if (label) {
+                    label.textContent = newName;
+                }
+
+                // Notify plugin to rename actual Figma page
+                parent.postMessage({
+                    pluginMessage: {
+                        type: 'rename-page',
+                        pageId,
+                        newName
+                    }
+                }, '*');
+            });
+        }
+
+        function handleBulkRemove() {
+            if (!isBulkMode || selectedPageIds.size === 0) return;
+            const bulkTextInput = document.getElementById('bulkTextInput');
+            if (!bulkTextInput) return;
+
+            const rawText = bulkTextInput.value;
+            if (!rawText) return;
+
+            const ids = Array.from(selectedPageIds);
+
+            ids.forEach(pageId => {
+                const page = existingPages.find(p => p.id === pageId);
+                if (!page) return;
+
+                const baseName = page.name || '';
+
+                // Remove all exact occurrences of rawText
+                if (!baseName.includes(rawText)) return;
+
+                const newName = baseName.split(rawText).join('');
+                if (newName === baseName) return;
+
+                // Update local state
+                page.name = newName;
+
+                // Update UI element if present
+                const label = document.querySelector(`.page-name[data-page-id="${pageId}"]`);
+                if (label) {
+                    label.textContent = newName;
+                }
+
+                parent.postMessage({
+                    pluginMessage: {
+                        type: 'rename-page',
+                        pageId,
+                        newName
+                    }
+                }, '*');
+            });
         }
 
         function cleanupDropState() {
@@ -392,6 +845,9 @@
             allItems.forEach((item, index) => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'workspace-item';
+                if (isBulkMode && selectedPageIds.has(item.id)) {
+                    itemEl.classList.add('selected');
+                }
                 itemEl.style.animation = 'workspaceItemEnter 0.12s ease-out';
                 itemEl.dataset.index = index;
                 
@@ -414,6 +870,7 @@
                     if (deleteBtn) {
                         deleteBtn.addEventListener('click', (e) => {
                             e.stopPropagation();
+                            if (isBulkMode) return;
                             deletePage(item.id);
                         });
                     }
@@ -421,105 +878,115 @@
                     if (pageName) {
                         pageName.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            startRename(pageName, item.id);
+                            if (isBulkMode) {
+                                togglePageSelection(item.id);
+                            } else {
+                                startRename(pageName, item.id);
+                            }
                         });
                     }
 
-                    // Drag & drop reordering
-                    itemEl.draggable = true;
+                    if (isBulkMode) {
+                        itemEl.addEventListener('click', () => {
+                            togglePageSelection(item.id);
+                        });
+                    } else {
+                        // Drag & drop reordering
+                        itemEl.draggable = true;
 
-                    itemEl.addEventListener('dragstart', (e) => {
-                        draggedPageId = item.id;
-                        itemEl.classList.add('dragging');
-                        if (e.dataTransfer) {
-                            e.dataTransfer.effectAllowed = 'move';
-                            e.dataTransfer.setData('text/plain', String(index));
-                        }
-                    });
-
-                    itemEl.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        if (!draggedPageId || draggedPageId === item.id) {
-                            return;
-                        }
-
-                        // Create drop indicator if needed
-                        if (!dropIndicator) {
-                            dropIndicator = document.createElement('div');
-                            dropIndicator.className = 'drop-indicator';
-                        }
-
-                        const rect = itemEl.getBoundingClientRect();
-                        const isBefore = e.clientY < rect.top + rect.height / 2;
-
-                        const container = workspaceItemsContainer;
-                        if (!container) {
-                            return;
-                        }
-
-                        if (isBefore) {
-                            container.insertBefore(dropIndicator, itemEl);
-                            dropIndicator.dataset.dropPosition = 'before';
-                            dropIndicator.dataset.targetIndex = String(index);
-                        } else {
-                            if (itemEl.nextSibling) {
-                                container.insertBefore(dropIndicator, itemEl.nextSibling);
-                            } else {
-                                container.appendChild(dropIndicator);
+                        itemEl.addEventListener('dragstart', (e) => {
+                            draggedPageId = item.id;
+                            itemEl.classList.add('dragging');
+                            if (e.dataTransfer) {
+                                e.dataTransfer.effectAllowed = 'move';
+                                e.dataTransfer.setData('text/plain', String(index));
                             }
-                            dropIndicator.dataset.dropPosition = 'after';
-                            dropIndicator.dataset.targetIndex = String(index);
-                        }
+                        });
 
-                        if (e.dataTransfer) {
-                            e.dataTransfer.dropEffect = 'move';
-                        }
-                    });
+                        itemEl.addEventListener('dragover', (e) => {
+                            e.preventDefault();
+                            if (!draggedPageId || draggedPageId === item.id) {
+                                return;
+                            }
 
-                    itemEl.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                            // Create drop indicator if needed
+                            if (!dropIndicator) {
+                                dropIndicator = document.createElement('div');
+                                dropIndicator.className = 'drop-indicator';
+                            }
 
-                        if (!draggedPageId || !dropIndicator) {
-                            return;
-                        }
+                            const rect = itemEl.getBoundingClientRect();
+                            const isBefore = e.clientY < rect.top + rect.height / 2;
 
-                        const position = dropIndicator.dataset.dropPosition || 'before';
-                        const targetIndexRaw = dropIndicator.dataset.targetIndex;
-                        const targetIndex = targetIndexRaw ? parseInt(targetIndexRaw, 10) : index;
+                            const container = workspaceItemsContainer;
+                            if (!container) {
+                                return;
+                            }
 
-                        const allItems = [...existingPages.map(page => ({ ...page, isExisting: true }))];
+                            if (isBefore) {
+                                container.insertBefore(dropIndicator, itemEl);
+                                dropIndicator.dataset.dropPosition = 'before';
+                                dropIndicator.dataset.targetIndex = String(index);
+                            } else {
+                                if (itemEl.nextSibling) {
+                                    container.insertBefore(dropIndicator, itemEl.nextSibling);
+                                } else {
+                                    container.appendChild(dropIndicator);
+                                }
+                                dropIndicator.dataset.dropPosition = 'after';
+                                dropIndicator.dataset.targetIndex = String(index);
+                            }
 
-                        const from = allItems.findIndex(p => p.id === draggedPageId);
-                        let to = targetIndex;
+                            if (e.dataTransfer) {
+                                e.dataTransfer.dropEffect = 'move';
+                            }
+                        });
 
-                        if (position === 'after') {
-                            to = targetIndex + 1;
-                        }
+                        itemEl.addEventListener('drop', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
 
-                        const [moved] = allItems.splice(from, 1);
+                            if (!draggedPageId || !dropIndicator) {
+                                return;
+                            }
 
-                        if (from < to) {
-                            to = to - 1;
-                        }
+                            const position = dropIndicator.dataset.dropPosition || 'before';
+                            const targetIndexRaw = dropIndicator.dataset.targetIndex;
+                            const targetIndex = targetIndexRaw ? parseInt(targetIndexRaw, 10) : index;
 
-                        if (to < 0) {
-                            to = 0;
-                        }
-                        if (to > allItems.length) {
-                            to = allItems.length;
-                        }
+                            const allItems = [...existingPages.map(page => ({ ...page, isExisting: true }))];
 
-                        allItems.splice(to, 0, moved);
+                            const from = allItems.findIndex(p => p.id === draggedPageId);
+                            let to = targetIndex;
 
-                        updateItemsOrder(allItems);
-                        cleanupDropState();
-                    });
+                            if (position === 'after') {
+                                to = targetIndex + 1;
+                            }
 
-                    itemEl.addEventListener('dragend', () => {
-                        itemEl.classList.remove('dragging');
-                        cleanupDropState();
-                    });
+                            const [moved] = allItems.splice(from, 1);
+
+                            if (from < to) {
+                                to = to - 1;
+                            }
+
+                            if (to < 0) {
+                                to = 0;
+                            }
+                            if (to > allItems.length) {
+                                to = allItems.length;
+                            }
+
+                            allItems.splice(to, 0, moved);
+
+                            updateItemsOrder(allItems);
+                            cleanupDropState();
+                        });
+
+                        itemEl.addEventListener('dragend', () => {
+                            itemEl.classList.remove('dragging');
+                            cleanupDropState();
+                        });
+                    }
                 }
 
                 workspaceItemsContainer.appendChild(itemEl);

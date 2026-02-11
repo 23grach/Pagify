@@ -151,13 +151,45 @@ class PageManager {
       if (!pageToDelete) {
         console.log('Page not found');
         NotificationService.send('Page not found', 'error');
+        // Resync UI with actual pages
+        this.sendExistingPages();
         return;
       }
 
       if (figma.root.children.length <= 1) {
-        console.log('Cannot delete last page');
-        NotificationService.send('Cannot delete the last page', 'warning');
+        console.log('Cannot delete last remaining page');
+        NotificationService.send(
+          'You can’t delete the page you’re currently on when it is the only page in the file. Create or duplicate another page first.',
+          'warning'
+        );
+        // Resync UI in case it optimistically hid the page
+        this.sendExistingPages();
         return;
+      }
+      
+      // If deleting the current page, switch to a neighbour first
+      if (pageToDelete === figma.currentPage) {
+        const pages = figma.root.children;
+        const currentIndex = pages.indexOf(pageToDelete);
+        let newCurrentPage: PageNode | null = null;
+
+        if (currentIndex > 0) {
+          newCurrentPage = pages[currentIndex - 1] as PageNode;
+        } else if (currentIndex < pages.length - 1) {
+          newCurrentPage = pages[currentIndex + 1] as PageNode;
+        }
+
+        if (!newCurrentPage) {
+          console.log('No alternate page to switch to before deletion');
+          NotificationService.send(
+            'You can’t delete the page you’re currently on because it is the only page in the file.',
+            'warning'
+          );
+          this.sendExistingPages();
+          return;
+        }
+
+        figma.currentPage = newCurrentPage;
       }
 
       const pageName = pageToDelete.name;
@@ -169,6 +201,8 @@ class PageManager {
     } catch (error) {
       console.error('Error deleting page:', error);
       NotificationService.send('Error deleting page', 'error');
+      // On any error, resync UI with the real page list
+      this.sendExistingPages();
     }
   }
 
