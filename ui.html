@@ -467,6 +467,8 @@
                                 <button class="bulk-apply-btn" id="bulkPrefixBtn" disabled>Add to start</button>
                                 <button class="bulk-apply-btn" id="bulkSuffixBtn" disabled>Add to end</button>
                                 <button class="bulk-remove-btn" id="bulkRemoveBtn" disabled>Remove text</button>
+                                <button class="bulk-remove-btn" id="bulkMoveTopBtn" disabled>Move to top</button>
+                                <button class="bulk-remove-btn" id="bulkMoveBottomBtn" disabled>Move to bottom</button>
                             </div>
                             <button class="bulk-delete-btn" id="bulkDeleteBtn" disabled>Delete Selected</button>
                         </div>
@@ -515,6 +517,8 @@
             const bulkPrefixBtn = document.getElementById('bulkPrefixBtn');
             const bulkSuffixBtn = document.getElementById('bulkSuffixBtn');
             const bulkRemoveBtn = document.getElementById('bulkRemoveBtn');
+            const bulkMoveTopBtn = document.getElementById('bulkMoveTopBtn');
+            const bulkMoveBottomBtn = document.getElementById('bulkMoveBottomBtn');
             const bulkTextInput = document.getElementById('bulkTextInput');
 
             if (bulkToggle) {
@@ -560,6 +564,18 @@
             if (bulkRemoveBtn) {
                 bulkRemoveBtn.addEventListener('click', () => {
                     handleBulkRemove();
+                });
+            }
+
+            if (bulkMoveTopBtn) {
+                bulkMoveTopBtn.addEventListener('click', () => {
+                    handleBulkMove('top');
+                });
+            }
+
+            if (bulkMoveBottomBtn) {
+                bulkMoveBottomBtn.addEventListener('click', () => {
+                    handleBulkMove('bottom');
                 });
             }
 
@@ -635,6 +651,8 @@
             const bulkPrefixBtn = document.getElementById('bulkPrefixBtn');
             const bulkSuffixBtn = document.getElementById('bulkSuffixBtn');
             const bulkRemoveBtn = document.getElementById('bulkRemoveBtn');
+            const bulkMoveTopBtn = document.getElementById('bulkMoveTopBtn');
+            const bulkMoveBottomBtn = document.getElementById('bulkMoveBottomBtn');
             const bulkTextInput = document.getElementById('bulkTextInput');
             const selectedCount = selectedPageIds.size;
             const textValue = bulkTextInput ? bulkTextInput.value : '';
@@ -662,6 +680,7 @@
             }
             
             const canApplyText = isBulkMode && selectedCount > 0 && hasText;
+            const canMove = isBulkMode && selectedCount > 0;
 
             if (bulkPrefixBtn) {
                 bulkPrefixBtn.disabled = !canApplyText;
@@ -673,6 +692,14 @@
 
             if (bulkRemoveBtn) {
                 bulkRemoveBtn.disabled = !canApplyText;
+            }
+
+            if (bulkMoveTopBtn) {
+                bulkMoveTopBtn.disabled = !canMove;
+            }
+
+            if (bulkMoveBottomBtn) {
+                bulkMoveBottomBtn.disabled = !canMove;
             }
         }
 
@@ -836,6 +863,30 @@
                     }
                 }, '*');
             });
+        }
+
+        function handleBulkMove(mode) {
+            if (!isBulkMode || selectedPageIds.size === 0) return;
+            if (mode !== 'top' && mode !== 'bottom') return;
+
+            const allItems = existingPages.map(page => ({
+                ...page,
+                isExisting: true
+            }));
+
+            const selectedIds = new Set(selectedPageIds);
+
+            const selectedItems = allItems.filter(item => selectedIds.has(item.id));
+            const otherItems = allItems.filter(item => !selectedIds.has(item.id));
+
+            let newOrder;
+            if (mode === 'top') {
+                newOrder = [...selectedItems, ...otherItems];
+            } else {
+                newOrder = [...otherItems, ...selectedItems];
+            }
+
+            updateItemsOrder(newOrder);
         }
 
         function cleanupDropState() {
