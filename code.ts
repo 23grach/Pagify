@@ -14,7 +14,7 @@ interface PageItem {
 }
 
 interface PluginMessage {
-  type: 'create-pages' | 'delete-page' | 'reorder-page' | 'rename-page';
+  type: 'create-pages' | 'delete-page' | 'reorder-page' | 'rename-page' | 'refresh-pages';
   items?: PageItem[];
   pageId?: string;
   newIndex?: number;
@@ -282,6 +282,10 @@ class MessageHandler {
         }
         break;
 
+      case 'refresh-pages':
+        PageManager.sendExistingPages();
+        break;
+
       default:
         console.warn('Unknown message type:', (msg as {type: string}).type);
     }
@@ -289,7 +293,7 @@ class MessageHandler {
 }
 
 // Plugin initialization
-figma.showUI(__html__, { width: 600, height: 800 });
+figma.showUI(__html__, { width: 360, height: 800 });
 
 // Send existing pages when UI loads
 PageManager.sendExistingPages();

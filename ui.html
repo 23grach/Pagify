@@ -42,8 +42,9 @@
             letter-spacing: -0.01em;
         }
 
-        .bulk-toggle-btn {
-            padding: 6px 10px;
+        .bulk-toggle-btn,
+        .bulk-select-all-btn {
+            padding: 6px 12px;
             border-radius: 999px;
             border: 1px solid #e5e7eb;
             background: #f9fafb;
@@ -54,41 +55,24 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+            height: 26px;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
         }
 
-        .bulk-toggle-btn:hover {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-            color: #1d4ed8;
+        .bulk-toggle-btn:hover,
+        .bulk-select-all-btn:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #111827;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
         }
 
         .bulk-toggle-btn.active {
-            background: #1d4ed8;
-            border-color: #1d4ed8;
-            color: #eff6ff;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.24);
-        }
-
-        .bulk-select-all-btn {
-            padding: 6px 10px;
-            border-radius: 999px;
-            border: 1px solid transparent;
-            background: transparent;
-            color: #6b7280;
-            font-size: 11px;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: color 0.15s ease, background-color 0.15s ease;
-        }
-
-        .bulk-select-all-btn:hover {
-            background: #f3f4f6;
-            color: #111827;
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #f9fafb;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.35);
+            transform: translateY(-0.5px);
         }
 
         .bulk-select-all-btn.hidden {
@@ -99,7 +83,8 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
             padding: 16px;
             gap: 16px;
         }
@@ -112,14 +97,10 @@
         }
 
         .workspace {
-            background: #fafafa;
-            border-radius: 12px;
-            border: 2px dashed #e6e6e6;
-            padding: 16px;
+            padding: 4px 0 24px;
             min-height: 200px;
             position: relative;
-            overflow-y: auto;
-            transition: all 0.2s ease;
+            overflow: visible;
         }
 
         #workspace {
@@ -132,9 +113,26 @@
             font-size: 14px;
             font-weight: 600;
             color: #6b7280;
-            margin-bottom: 16px;
-            text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        .app-header {
+            padding: 12px 16px 8px;
+            border-bottom: 1px solid #f3f4f6;
+            background: #ffffff;
+        }
+
+        .workspace-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .workspace-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .workspace-items {
@@ -274,26 +272,34 @@
 
         .bulk-footer {
             display: none;
-            position: fixed;
-            left: 50%;
+            position: sticky;
             bottom: 12px;
-            transform: translateX(-50%);
-            padding: 10px 14px;
-            border-radius: 999px;
-            background: rgba(15, 23, 42, 0.96);
-            color: #e5e7eb;
+            margin-top: 12px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            background: rgba(249, 250, 251, 0.96);
+            color: #111827;
             font-size: 12px;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
-            z-index: 1000;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 8px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+            z-index: 10;
+            backdrop-filter: blur(12px);
+            flex-direction: column;
+        }
+
+        .bulk-footer-spacer {
+            height: 40px;
+            flex-shrink: 0;
         }
 
         .bulk-footer-left {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            align-items: baseline;
+            gap: 4px;
+            font-size: 11px;
         }
 
         .bulk-footer-count {
@@ -302,18 +308,34 @@
 
         .bulk-footer-actions {
             display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .bulk-footer-buttons-row {
+            display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .bulk-footer-buttons-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .bulk-text-input {
-            min-width: 140px;
-            max-width: 220px;
-            padding: 6px 8px;
+            flex: 1 1 auto;
+            min-width: 0;
+            width: 100%;
+            padding: 7px 12px;
             border-radius: 999px;
-            border: 1px solid #4b5563;
-            background: #020617;
-            color: #e5e7eb;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            color: #111827;
             font-size: 11px;
             outline: none;
         }
@@ -329,41 +351,60 @@
         .bulk-apply-btn,
         .bulk-remove-btn,
         .bulk-delete-btn {
-            padding: 6px 10px;
+            padding: 7px 14px;
             border-radius: 999px;
-            border: none;
+            border: 1px solid transparent;
             font-size: 11px;
             font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease, opacity 0.15s ease;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease, opacity 0.15s ease, color 0.15s ease;
         }
 
         .bulk-apply-btn {
-            background: #1d4ed8;
-            color: #eff6ff;
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #f9fafb;
         }
 
         .bulk-apply-btn:hover:not(:disabled) {
-            background: #1e40af;
-            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.45);
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.4);
             transform: translateY(-0.5px);
         }
 
+        .bulk-remove-btn {
+            background: transparent;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+
+        .bulk-remove-btn:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+            color: #111827;
+        }
+
         .bulk-delete-btn {
-            background: #ef4444;
-            color: #fef2f2;
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #b91c1c;
         }
 
         .bulk-delete-btn:hover:not(:disabled) {
-            background: #dc2626;
-            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.45);
+            background: #fee2e2;
+            border-color: #fca5a5;
+            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
             transform: translateY(-0.5px);
         }
 
         .bulk-apply-btn:disabled,
         .bulk-remove-btn:disabled,
         .bulk-delete-btn:disabled {
-            background: #6b7280;
             cursor: default;
             box-shadow: none;
             opacity: 0.6;
@@ -391,20 +432,20 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-row">
-            <h2>Pagify</h2>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <button id="bulkSelectAll" class="bulk-select-all-btn hidden">Select all</button>
-                <button id="bulkToggle" class="bulk-toggle-btn">Bulk edit</button>
+    <div class="app-header">
+            <div class="workspace-header-row">
+                <div class="workspace-title">Pagify</div>
+                <div class="workspace-header-actions">
+                    <button id="refreshPages" class="bulk-select-all-btn">Refresh</button>
+                    <button id="bulkSelectAll" class="bulk-select-all-btn hidden">Select all</button>
+                    <button id="bulkToggle" class="bulk-toggle-btn">Bulk edit</button>
+                </div>
             </div>
-        </div>
     </div>
 
     <div class="content">
         <div class="constructor">
             <div class="workspace" id="workspace">
-                <div class="workspace-title">Page Structure</div>
                 <div class="workspace-items" id="workspaceItems">
                     <div class="empty-workspace" id="emptyWorkspace">
                         Loading...
@@ -421,12 +462,17 @@
                             type="text"
                             placeholder="Text to add or remove"
                         />
-                        <button class="bulk-apply-btn" id="bulkPrefixBtn" disabled>Add to start</button>
-                        <button class="bulk-apply-btn" id="bulkSuffixBtn" disabled>Add to end</button>
-                        <button class="bulk-remove-btn" id="bulkRemoveBtn" disabled>Remove text</button>
-                        <button class="bulk-delete-btn" id="bulkDeleteBtn" disabled>Delete Selected</button>
+                        <div class="bulk-footer-buttons-row">
+                            <div class="bulk-footer-buttons-group">
+                                <button class="bulk-apply-btn" id="bulkPrefixBtn" disabled>Add to start</button>
+                                <button class="bulk-apply-btn" id="bulkSuffixBtn" disabled>Add to end</button>
+                                <button class="bulk-remove-btn" id="bulkRemoveBtn" disabled>Remove text</button>
+                            </div>
+                            <button class="bulk-delete-btn" id="bulkDeleteBtn" disabled>Delete Selected</button>
+                        </div>
                     </div>
                 </div>
+                <div class="bulk-footer-spacer"></div>
             </div>
         </div>
     </div>
@@ -464,6 +510,7 @@
         function setupEventListeners() {
             const bulkToggle = document.getElementById('bulkToggle');
             const bulkSelectAll = document.getElementById('bulkSelectAll');
+            const refreshPagesBtn = document.getElementById('refreshPages');
             const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
             const bulkPrefixBtn = document.getElementById('bulkPrefixBtn');
             const bulkSuffixBtn = document.getElementById('bulkSuffixBtn');
@@ -473,6 +520,16 @@
             if (bulkToggle) {
                 bulkToggle.addEventListener('click', () => {
                     toggleBulkMode();
+                });
+            }
+
+            if (refreshPagesBtn) {
+                refreshPagesBtn.addEventListener('click', () => {
+                    parent.postMessage({
+                        pluginMessage: {
+                            type: 'refresh-pages'
+                        }
+                    }, '*');
                 });
             }
 
@@ -859,7 +916,7 @@
                             <span class="page-name" data-page-id="${item.id}">${item.name}</span>
                         </div>
                         <div class="item-actions">
-                            <button class="btn-small danger delete-btn" title="Delete">✕</button>
+                            <button class="btn-small danger delete-btn" title="Delete">🗑</button>
                         </div>
                     `;
 
