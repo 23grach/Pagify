@@ -14,11 +14,12 @@ interface PageItem {
 }
 
 interface PluginMessage {
-  type: 'create-pages' | 'delete-page' | 'reorder-page' | 'rename-page' | 'refresh-pages';
+  type: 'create-pages' | 'delete-page' | 'reorder-page' | 'rename-page' | 'refresh-pages' | 'set-page-color';
   items?: PageItem[];
   pageId?: string;
   newIndex?: number;
   newName?: string;
+  color?: string;
 }
 
 interface NotificationMessage {
@@ -252,6 +253,68 @@ class PageManager {
       NotificationService.send('Error renaming page', 'error');
     }
   }
+
+  /**
+   * Set background color of a page using hex string.
+   */
+  static setPageColor(pageId: string, color: string): void {
+    if (!pageId || !color) {
+      NotificationService.send('Parameters not specified for page color update', 'error');
+      return;
+    }
+
+    try {
+      const pageToUpdate = figma.root.children.find(page => page.id === pageId);
+      if (!pageToUpdate) {
+        NotificationService.send('Page not found', 'error');
+        return;
+      }
+
+      const rgb = PageManager.hexToRgb(color);
+      if (!rgb) {
+        NotificationService.send('Invalid hex color value', 'error');
+        return;
+      }
+
+      pageToUpdate.backgrounds = [{
+        type: 'SOLID',
+        color: {
+          r: rgb.r / 255,
+          g: rgb.g / 255,
+          b: rgb.b / 255
+        }
+      }];
+    } catch (error) {
+      console.error('Error setting page color:', error);
+      NotificationService.send('Error setting page color', 'error');
+    }
+  }
+
+  /**
+   * Convert hex color string (#rgb or #rrggbb) to RGB components.
+   */
+  private static hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+    const value = hex.trim();
+    const match = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(value);
+    if (!match) {
+      return null;
+    }
+
+    let normalized = match[1];
+    if (normalized.length === 3) {
+      normalized = normalized.split('').map(ch => ch + ch).join('');
+    }
+
+    const r = parseInt(normalized.slice(0, 2), 16);
+    const g = parseInt(normalized.slice(2, 4), 16);
+    const b = parseInt(normalized.slice(4, 6), 16);
+
+    if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) {
+      return null;
+    }
+
+    return { r, g, b };
+  }
 }
 
 // Message Handler
@@ -284,6 +347,12 @@ class MessageHandler {
 
       case 'refresh-pages':
         PageManager.sendExistingPages();
+        break;
+
+      case 'set-page-color':
+        if (msg.pageId && msg.color) {
+          PageManager.setPageColor(msg.pageId, msg.color);
+        }
         break;
 
       default:

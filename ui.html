@@ -460,13 +460,14 @@
                             id="bulkTextInput"
                             class="bulk-text-input"
                             type="text"
-                            placeholder="Text to add or remove"
+                            placeholder="Text to add or remove / hex color"
                         />
                         <div class="bulk-footer-buttons-row">
                             <div class="bulk-footer-buttons-group">
                                 <button class="bulk-apply-btn" id="bulkPrefixBtn" disabled>Add to start</button>
                                 <button class="bulk-apply-btn" id="bulkSuffixBtn" disabled>Add to end</button>
                                 <button class="bulk-remove-btn" id="bulkRemoveBtn" disabled>Remove text</button>
+                                <button class="bulk-remove-btn" id="bulkColorBtn" disabled>Apply color</button>
                                 <button class="bulk-remove-btn" id="bulkMoveTopBtn" disabled>Move to top</button>
                                 <button class="bulk-remove-btn" id="bulkMoveBottomBtn" disabled>Move to bottom</button>
                             </div>
@@ -519,6 +520,7 @@
             const bulkRemoveBtn = document.getElementById('bulkRemoveBtn');
             const bulkMoveTopBtn = document.getElementById('bulkMoveTopBtn');
             const bulkMoveBottomBtn = document.getElementById('bulkMoveBottomBtn');
+            const bulkColorBtn = document.getElementById('bulkColorBtn');
             const bulkTextInput = document.getElementById('bulkTextInput');
 
             if (bulkToggle) {
@@ -576,6 +578,18 @@
             if (bulkMoveBottomBtn) {
                 bulkMoveBottomBtn.addEventListener('click', () => {
                     handleBulkMove('bottom');
+                });
+            }
+
+            if (bulkColorBtn) {
+                bulkColorBtn.addEventListener('click', () => {
+                    handleBulkColor();
+                });
+            }
+
+            if (bulkColorBtn) {
+                bulkColorBtn.addEventListener('click', () => {
+                    handleBulkColor();
                 });
             }
 
@@ -653,6 +667,7 @@
             const bulkRemoveBtn = document.getElementById('bulkRemoveBtn');
             const bulkMoveTopBtn = document.getElementById('bulkMoveTopBtn');
             const bulkMoveBottomBtn = document.getElementById('bulkMoveBottomBtn');
+            const bulkColorBtn = document.getElementById('bulkColorBtn');
             const bulkTextInput = document.getElementById('bulkTextInput');
             const selectedCount = selectedPageIds.size;
             const textValue = bulkTextInput ? bulkTextInput.value : '';
@@ -681,6 +696,7 @@
             
             const canApplyText = isBulkMode && selectedCount > 0 && hasText;
             const canMove = isBulkMode && selectedCount > 0;
+            const canApplyColor = isBulkMode && selectedCount > 0 && isValidHexColor(textValue);
 
             if (bulkPrefixBtn) {
                 bulkPrefixBtn.disabled = !canApplyText;
@@ -700,6 +716,10 @@
 
             if (bulkMoveBottomBtn) {
                 bulkMoveBottomBtn.disabled = !canMove;
+            }
+
+            if (bulkColorBtn) {
+                bulkColorBtn.disabled = !canApplyColor;
             }
         }
 
@@ -887,6 +907,34 @@
             }
 
             updateItemsOrder(newOrder);
+        }
+
+        function isValidHexColor(value) {
+            if (!value) return false;
+            const trimmed = value.trim();
+            return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed);
+        }
+
+        function handleBulkColor() {
+            if (!isBulkMode || selectedPageIds.size === 0) return;
+            const bulkTextInput = document.getElementById('bulkTextInput');
+            if (!bulkTextInput) return;
+
+            const raw = bulkTextInput.value.trim();
+            if (!isValidHexColor(raw)) return;
+
+            const color = raw;
+            const ids = Array.from(selectedPageIds);
+
+            ids.forEach(pageId => {
+                parent.postMessage({
+                    pluginMessage: {
+                        type: 'set-page-color',
+                        pageId,
+                        color
+                    }
+                }, '*');
+            });
         }
 
         function cleanupDropState() {
